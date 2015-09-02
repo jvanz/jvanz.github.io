@@ -6,6 +6,8 @@ title: From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg
 While I have not decided what it will be my first post about development stuff I'll post the text that me and my friend wrote to the The Document Foundation's blog. In that text we talked about out trip to LibreOffice hackfest in freiburg.
 From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg
 
+<!-- more -->
+
 José Guilherme Vanz and Marcos Souza, LibreOffice development in Brazil
 
 Our first contact with the LibreOffice was in FISL 2012 (International Forum of Free Software, held in Porto Alegre, Brazil). Since then, we got quickly involved with the LibreOffice development community. Now we attend events in Brazil advocating to people about the better office suite ever done!

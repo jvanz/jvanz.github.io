@@ -7,18 +7,17 @@ permalink:        pretty
 relative_permalinks: true
 
 # Setup
-title:            plb
+title:            vanz
 tagline:          ''
 description:      >
   <p class="lead">
-    I'm Paulo Leonardo Benatto, from south Brazil and living in Brighton, UK. Working as 
-    Linux Sysadmin, but developer in spare time.
-  </p> 
-url:              http://patito.github.io
+  I'm José Guilherme Vanz, from south Brazil. Working as Software Engineer. I love Open Source and programming (especially in C/C++, Python and Scala)
+  </p>
+url:              http://jvanz.github.io
 baseurl:          /
 
 author:
-  name:           'Paulo Leonardo Benatto'
-  url:            https://twitter.com/pbenatto
+  name:           'José Guilherme Vanz'
+  url:            https://twitter.com/vanzstuff
 
 paginate:         5

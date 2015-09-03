@@ -46,7 +46,7 @@ instead of:
 
 ```git stash pop```
 
-and now, if you execute `git stash list again`, you can see that you dropped changes from the stash and does not apply them again on the master branch. OMG! Who can help us?
+and now, if you execute `git stash` list again, you can see that you dropped changes from the stash and does not apply them again on the master branch. OMG! Who can help us?
 As you will seen soon git did not delete the object that contains your changes. It just remove the reference to it.
 To prove this you can used the `git-fsck` command, this command verifies the connectivity and validity of the objects in the database.
 On the begin of the repository I executed the `git-fsck` command and the output were:

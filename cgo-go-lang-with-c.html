@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<link href="http://gmpg.org/xfn/11" rel="profile">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+		<!-- Enable responsiveness on mobile devices-->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+		<title>vanz</title>
+
+		<!-- CSS -->
+		<link href="//fonts.googleapis.com/" rel="dns-prefetch">
+		<link href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Abril+Fatface|PT+Sans:400,400italic,700&amp;subset=latin,latin-ext" rel="stylesheet">
+
+		<link rel="stylesheet" href="http://jvanz.github.com/theme/css/poole.css" />
+		<link rel="stylesheet" href="http://jvanz.github.com/theme/css/hyde.css" />
+		<link rel="stylesheet" href="http://jvanz.github.com/theme/css/syntax.css" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+
+		<!-- RSS -->
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+	</head>
+
+	<body class="theme-base-0d">
+<div class="sidebar">
+	<div class="container sidebar-sticky">
+		<div class="sidebar-about">
+
+			<h1>
+				<a href="/">
+					<img class="profile-picture" src="http://jvanz.github.com/images/avatar.jpg">
+					vanz
+				</a>
+			</h1>
+			<p class="lead"></p>
+			<p class="lead">I'm José Guilherme Vanz, from south Brazil. Working as Software Engineer. I love Open Source and programming </p>
+			<p></p>
+		</div>
+		<nav class="sidebar-nav">
+			<a class="sidebar-nav-item" href="mailto:guilherme.sft@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			<a class="sidebar-nav-item" href="https://twitter.com/vanzstuff">
+				<i class="fa fa-twitter"></i>
+			</a>
+			<a class="sidebar-nav-item" href="https://br.linkedin.com/in/joseguilhermevanz">
+				<i class="fa fa-linkedin"></i>
+			</a>
+			<a class="sidebar-nav-item" href="https://github.com/jvanz">
+				<i class="fa fa-github"></i>
+			</a>
+			<a class="sidebar-nav-item" href="feeds/all.rss.xml">
+				<i class="fa fa-feed"></i>
+			</a>
+		</nav>
+	</div>
+</div>		<div class="content container">
+<div class="post">
+	<h1 class="post-title">cgo: Go lang with C</h1>
+	<span class="post-date">Tue 22 September 2015</span>
+	<p>Some weeks ago I had to customize the <a href="https://www.docker.com/">Docker</a> to integrate it with some libraries written and C.
+Maybe you already know Docker is written in Go language and to do this task was used <a href="https://golang.org/cmd/cgo/">cgo</a>
+Cgo enables integrate Go code with C. It shows itself easier and smooth comparing with my past experiences with JNI</p>
+<h2>Hello World!</h2>
+<p>To start let's code the old but gold hello world program. In the first example the program will just print a string that is returned by a C function.
+As you can see in the following snippet, cgo allows to put C code inside the Go source code. The only thing has to do is import the pseudo-package <code>C</code>.
+The comments before this import is a C code that will be compiled as a header.</p>
+<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="c1">//char* get_msg(){</span>
+<span class="c1">//      return &quot;Hello Go!&quot;;</span>
+<span class="c1">//}</span>
+<span class="kn">import</span> <span class="s">&quot;C&quot;</span>
+<span class="kn">import</span> <span class="s">&quot;fmt&quot;</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">msg</span> <span class="p">=</span> <span class="nx">C</span><span class="p">.</span><span class="nx">get_msg</span><span class="p">()</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">C</span><span class="p">.</span><span class="nx">GoString</span><span class="p">(</span><span class="nx">msg</span><span class="p">))</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h2>More funny program</h2>
+<p>To make the things more funny, the next program will write the command line arguments to a file. Take a look the code:</p>
+<div class="highlight"><pre><span class="cm">/*</span>
+<span class="cm">#include &lt;stdio.h&gt;</span>
+
+<span class="cm">FILE *file;</span>
+
+<span class="cm">int finish() {</span>
+<span class="cm">    fflush(file);</span>
+<span class="cm">    fclose(file);</span>
+<span class="cm">}</span>
+
+<span class="cm">int init(const char* file_name) {</span>
+<span class="cm">    if (file){</span>
+<span class="cm">        finish();</span>
+<span class="cm">    }</span>
+<span class="cm">    file = fopen(file_name, &quot;w+&quot;);</span>
+<span class="cm">}</span>
+
+<span class="cm">int write_file(const char* data, size_t len) {</span>
+<span class="cm">    if (!file){</span>
+<span class="cm">        printf(&quot;File is not open&quot;);</span>
+<span class="cm">        return 1;</span>
+<span class="cm">    }</span>
+<span class="cm">    if (fwrite(data, sizeof(char), len, file)) {</span>
+<span class="cm">        return 0;</span>
+<span class="cm">    }</span>
+<span class="cm">    printf(&quot;Error on writing...&quot;);</span>
+<span class="cm">    return 1;</span>
+
+<span class="cm">}</span>
+<span class="cm">*/</span>
+<span class="kn">import</span> <span class="s">&quot;C&quot;</span>
+<span class="kn">import</span> <span class="s">&quot;os&quot;</span>
+<span class="kn">import</span> <span class="s">&quot;unsafe&quot;</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">C</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">C</span><span class="p">.</span><span class="nx">CString</span><span class="p">(</span><span class="nx">os</span><span class="p">.</span><span class="nx">Args</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">a</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Args</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="p">{</span>
+        <span class="nx">cs</span> <span class="o">:=</span> <span class="nx">C</span><span class="p">.</span><span class="nx">CString</span><span class="p">(</span><span class="nx">a</span> <span class="o">+</span> <span class="s">&quot;\n&quot;</span><span class="p">)</span>
+        <span class="nx">C</span><span class="p">.</span><span class="nx">write_file</span><span class="p">(</span><span class="nx">cs</span><span class="p">,</span> <span class="nx">C</span><span class="p">.</span><span class="nx">size_t</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="nx">C</span><span class="p">.</span><span class="nx">free</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span><span class="p">(</span><span class="nx">cs</span><span class="p">))</span>
+    <span class="p">}</span>
+    <span class="nx">C</span><span class="p">.</span><span class="nx">finish</span><span class="p">()</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>The program requires at least two arguments. The first one is the path for a file where the program will write the other arguments.
+The code is quite simple. Go code uses three C functions to create, write and close a file. The C functions are:</p>
+<ul>
+<li><code>init(const char* file_name)</code>: function creates the file</li>
+<li><code>finish()</code>: function flushes the data and closes the file</li>
+<li><code>write_file(const char* data, size_t len)</code>: writes <code>len</code> chars from string <code>data</code> in the file</li>
+</ul>
+<p>In the beginning the Go code uses the <code>init</code> function to create the file. After that, the program walks through other arguments writing each of them
+in a file line. In the end, the program calls <code>finish</code> function to close the file. Nothing so special, but illustrate how you can use cgo.
+The C code written inside Go source code is used as a header. You can see the static library within <code>$GOPATH/pkg/&lt;package name&gt;</code></p>
+<p>It is important to remember that Go memory manager does not knows C variables and its allocated memory blocks. Thus, the programmer must to remember to free the allocated C string. Like it is being
+doing in the lines <code>C.free(unsafe.Pointer(cs))</code>. Otherwise, you will have memory leak issues.</p>
+<p>Furthermore, when some Go source file contains the special import "C" the Go tool looks for .c, .cpp, .cc and others files types in the same source code file directory. Then it compiles them with the default C/C++ compiler.
+So you might do this:</p>
+<p>writer.go:</p>
+<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="cm">/*</span>
+<span class="cm">#include &lt;stdio.h&gt;</span>
+
+<span class="cm">extern int finish();</span>
+<span class="cm">extern int init(const char* file_name);</span>
+<span class="cm">extern int write_file(const char* data, size_t len);</span>
+<span class="cm">*/</span>
+<span class="kn">import</span> <span class="s">&quot;C&quot;</span>
+<span class="kn">import</span> <span class="s">&quot;os&quot;</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">C</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">C</span><span class="p">.</span><span class="nx">CString</span><span class="p">(</span><span class="nx">os</span><span class="p">.</span><span class="nx">Args</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">a</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Args</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="p">{</span>
+        <span class="nx">C</span><span class="p">.</span><span class="nx">write_file</span><span class="p">(</span><span class="nx">C</span><span class="p">.</span><span class="nx">CString</span><span class="p">(</span><span class="nx">a</span><span class="o">+</span><span class="s">&quot;\n&quot;</span><span class="p">),</span> <span class="nx">C</span><span class="p">.</span><span class="nx">size_t</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="p">}</span>
+    <span class="nx">C</span><span class="p">.</span><span class="nx">finish</span><span class="p">()</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>writer.c:</p>
+<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+
+<span class="kt">FILE</span> <span class="o">*</span><span class="n">file</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">finish</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">fflush</span><span class="p">(</span><span class="n">file</span><span class="p">);</span>
+    <span class="n">fclose</span><span class="p">(</span><span class="n">file</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">init</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">file_name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">file</span><span class="p">){</span>
+        <span class="n">finish</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s">&quot;w+&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">write_file</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">data</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">file</span><span class="p">){</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;File is not open&quot;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">fwrite</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="p">),</span> <span class="n">len</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Error on writing...&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+
+
+<h4>Note</h4>
+<p>This post is very, very, very simple. If you would like know more see the references below.</p>
+<h5>References</h5>
+<p><a href="https://golang.org/cmd/cgo/">cgo</a></p>
+<p><a href="http://blog.golang.org/c-go-cgo">C? Go? Cgo!</a></p>
+	<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_shortname = 'jvanz';
+			(function() {
+	 			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	 			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	 			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	 		})();
+		</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</div>
+		</div>
+	</body>
+</html>

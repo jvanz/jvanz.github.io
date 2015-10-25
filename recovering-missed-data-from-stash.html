@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<link href="http://gmpg.org/xfn/11" rel="profile">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+		<!-- Enable responsiveness on mobile devices-->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+		<title>vanz</title>
+
+		<!-- CSS -->
+		<link href="//fonts.googleapis.com/" rel="dns-prefetch">
+		<link href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Abril+Fatface|PT+Sans:400,400italic,700&amp;subset=latin,latin-ext" rel="stylesheet">
+
+		<link rel="stylesheet" href="http://jvanz.github.com/theme/css/poole.css" />
+		<link rel="stylesheet" href="http://jvanz.github.com/theme/css/hyde.css" />
+		<link rel="stylesheet" href="http://jvanz.github.com/theme/css/syntax.css" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+
+		<!-- RSS -->
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+	</head>
+
+	<body class="theme-base-0d">
+<div class="sidebar">
+	<div class="container sidebar-sticky">
+		<div class="sidebar-about">
+
+			<h1>
+				<a href="/">
+					<img class="profile-picture" src="http://jvanz.github.com/images/avatar.jpg">
+					vanz
+				</a>
+			</h1>
+			<p class="lead"></p>
+			<p class="lead">I'm José Guilherme Vanz, from south Brazil. Working as Software Engineer. I love Open Source and programming </p>
+			<p></p>
+		</div>
+		<nav class="sidebar-nav">
+			<a class="sidebar-nav-item" href="mailto:guilherme.sft@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			<a class="sidebar-nav-item" href="https://twitter.com/vanzstuff">
+				<i class="fa fa-twitter"></i>
+			</a>
+			<a class="sidebar-nav-item" href="https://br.linkedin.com/in/joseguilhermevanz">
+				<i class="fa fa-linkedin"></i>
+			</a>
+			<a class="sidebar-nav-item" href="https://github.com/jvanz">
+				<i class="fa fa-github"></i>
+			</a>
+			<a class="sidebar-nav-item" href="feeds/all.rss.xml">
+				<i class="fa fa-feed"></i>
+			</a>
+		</nav>
+	</div>
+</div>		<div class="content container">
+<div class="post">
+	<h1 class="post-title">Recovering missed data from stash</h1>
+	<span class="post-date">Sat 15 February 2014</span>
+	<p>Today my colleague almost lost everything that he did during 4 days! Because  a wrong git command he dropped his changes saved on stash.
+After this sad episode we looked for a way to try to recover as least part of his work... and we did it!</p>
+<p>First of all, when you are implementing some big feature, split it in small pieces and commit it regularly. It's not a good idea stay so long time without commit your changes,  so take care.</p>
+<p>Let's simulate a scenario to show what you can do when you lost some changes dropped from stash.
+On our repository we have only one source file, main.c. We will use it to demonstrate the problem and the solution... so, our repository now is been like this:</p>
+<p><img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_01.jpeg" /></p>
+<p>and he have only an commit, the initial commit:</p>
+<p><img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_02.jpeg" /></p>
+<p>The first version of out file is:</p>
+<p><img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_03.jpeg" /></p>
+<p>So, let's start to code something. For this example, we do not need some big change, is only something to put in the stash. For this, I just will add a new line. The git-diff output should be:</p>
+<p><img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_04.jpeg" /></p>
+<p>Now, suppose that you have to pull some new changes from remote repository and you do not want to commit you changes. Thus, you decided to stashed your changes, pull the changes from remote repository
+and apply your changes again on the master.  For this, you execute the following command to move your changes to stash:</p>
+<p><code>git stash</code></p>
+<p>Looking into the stash we can see our changes there:</p>
+<p><img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_06.jpeg" /></p>
+<p>Now our code is in a safe place and the master branch is clean ( check with <code>git status</code>) and you can pull the changes. After pulled the changes, it's time to apply your changes again on the master.
+But accidentally you execute</p>
+<p><code>git stash drop</code></p>
+<p>instead of:</p>
+<p><code>git stash pop</code></p>
+<p>and now, if you execute <code>git stash list</code> again, you can see that you dropped changes from the stash and does not apply them again on the master branch. OMG! Who can help us?
+As you will seen soon git did not delete the object that contains your changes. It just remove the reference to it.
+To prove this you can used the <code>git-fsck</code> command, this command verifies the connectivity and validity of the objects in the database.
+On the begin of the repository I executed the <code>git-fsck</code> command and the output were:</p>
+<p><img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_07.jpeg" /></p>
+<p>Basically, I asked <code>git-fsck</code> show me the objects that are unreachable ( <code>--unreachable</code> argument ). As you can see, it didn't show any unreachable object.
+After I dropped the changes on my stash I executed the same command, and the output was different:</p>
+<p><img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_08.jpeg" /></p>
+<p>Now, we can see 3 unreachable objects. But which is our changes? Actually, I don't know. We have to search for it, for this job you can execute the <code>git-show</code> command for visualize what are each objects.</p>
+<p><img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_09.jpeg" /></p>
+<p>There it is! The ID 95ccbd927ad4cd413ee2a28014c81454f4ede82c is our changes. Ok, we found your missed changes. Let's recover it!
+An possible solution is checkout the ID into a new branch or apply the commit directly. Once you have the ID of the object with your changes is up to you decide what is the best way to put changes on the master branch again.
+For this example I will use the <code>git-stash</code> to apply the commit on my master branch again.</p>
+<p><code>git stash apply 95ccbd927ad4cd413ee2a28014c81454f4ede82c</code></p>
+<p>A important thing to remember, git run its garbage collector periodically. After the gc execution you cannot see more the unreachable objects using <code>git-fsck</code>. ;)</p>
+	<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_shortname = 'jvanz';
+			(function() {
+	 			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	 			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	 			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	 		})();
+		</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</div>
+		</div>
+	</body>
+</html>

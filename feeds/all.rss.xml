@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>vanz</title><link>http://jvanz.github.com/</link><description></description><atom:link href="http://jvanz.github.com/feeds/all.rss.xml" rel="self"></atom:link><lastBuildDate>Tue, 22 Sep 2015 00:00:00 -0300</lastBuildDate><item><title>cgo: Go lang with C</title><link>http://jvanz.github.com/cgo-go-lang-with-c.html</link><description>&lt;p&gt;Some weeks ago I had to customize the &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt; to integrate it with some libraries written and C.
+Maybe you already know Docker is written in Go language and to do this task was used &lt;a href="https://golang.org/cmd/cgo/"&gt;cgo&lt;/a&gt;
+Cgo enables integrate Go code with C. It shows itself easier and smooth comparing with my past experiences with JNI&lt;/p&gt;
+&lt;h2&gt;Hello World!&lt;/h2&gt;
+&lt;p&gt;To start let's code the old but gold hello world program. In the first example the program will just print a string that is returned by a C function.
+As you can see in the following snippet, cgo allows to put C code inside the Go source code. The only thing has to do is import the pseudo-package &lt;code&gt;C&lt;/code&gt;.
+The comments before this import is a C code that will be compiled as a header.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
+
+&lt;span class="c1"&gt;//char* get_msg(){&lt;/span&gt;
+&lt;span class="c1"&gt;//      return &amp;quot;Hello Go!&amp;quot;;&lt;/span&gt;
+&lt;span class="c1"&gt;//}&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;C&amp;quot;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;fmt&amp;quot;&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;msg&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;get_msg&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;GoString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2&gt;More funny program&lt;/h2&gt;
+&lt;p&gt;To make the things more funny, the next program will write the command line arguments to a file. Take a look the code:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cm"&gt;/*&lt;/span&gt;
+&lt;span class="cm"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+
+&lt;span class="cm"&gt;FILE *file;&lt;/span&gt;
+
+&lt;span class="cm"&gt;int finish() {&lt;/span&gt;
+&lt;span class="cm"&gt;    fflush(file);&lt;/span&gt;
+&lt;span class="cm"&gt;    fclose(file);&lt;/span&gt;
+&lt;span class="cm"&gt;}&lt;/span&gt;
+
+&lt;span class="cm"&gt;int init(const char* file_name) {&lt;/span&gt;
+&lt;span class="cm"&gt;    if (file){&lt;/span&gt;
+&lt;span class="cm"&gt;        finish();&lt;/span&gt;
+&lt;span class="cm"&gt;    }&lt;/span&gt;
+&lt;span class="cm"&gt;    file = fopen(file_name, &amp;quot;w+&amp;quot;);&lt;/span&gt;
+&lt;span class="cm"&gt;}&lt;/span&gt;
+
+&lt;span class="cm"&gt;int write_file(const char* data, size_t len) {&lt;/span&gt;
+&lt;span class="cm"&gt;    if (!file){&lt;/span&gt;
+&lt;span class="cm"&gt;        printf(&amp;quot;File is not open&amp;quot;);&lt;/span&gt;
+&lt;span class="cm"&gt;        return 1;&lt;/span&gt;
+&lt;span class="cm"&gt;    }&lt;/span&gt;
+&lt;span class="cm"&gt;    if (fwrite(data, sizeof(char), len, file)) {&lt;/span&gt;
+&lt;span class="cm"&gt;        return 0;&lt;/span&gt;
+&lt;span class="cm"&gt;    }&lt;/span&gt;
+&lt;span class="cm"&gt;    printf(&amp;quot;Error on writing...&amp;quot;);&lt;/span&gt;
+&lt;span class="cm"&gt;    return 1;&lt;/span&gt;
+
+&lt;span class="cm"&gt;}&lt;/span&gt;
+&lt;span class="cm"&gt;*/&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;C&amp;quot;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;os&amp;quot;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;unsafe&amp;quot;&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;init&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;CString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;os&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Args&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;a&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="k"&gt;range&lt;/span&gt; &lt;span class="nx"&gt;os&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Args&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;cs&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;CString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;a&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;\n&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write_file&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;cs&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;size_t&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+        &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;free&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;unsafe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Pointer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;cs&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;finish&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The program requires at least two arguments. The first one is the path for a file where the program will write the other arguments.
+The code is quite simple. Go code uses three C functions to create, write and close a file. The C functions are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;init(const char* file_name)&lt;/code&gt;: function creates the file&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;finish()&lt;/code&gt;: function flushes the data and closes the file&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;write_file(const char* data, size_t len)&lt;/code&gt;: writes &lt;code&gt;len&lt;/code&gt; chars from string &lt;code&gt;data&lt;/code&gt; in the file&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In the beginning the Go code uses the &lt;code&gt;init&lt;/code&gt; function to create the file. After that, the program walks through other arguments writing each of them
+in a file line. In the end, the program calls &lt;code&gt;finish&lt;/code&gt; function to close the file. Nothing so special, but illustrate how you can use cgo.
+The C code written inside Go source code is used as a header. You can see the static library within &lt;code&gt;$GOPATH/pkg/&amp;lt;package name&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;It is important to remember that Go memory manager does not knows C variables and its allocated memory blocks. Thus, the programmer must to remember to free the allocated C string. Like it is being
+doing in the lines &lt;code&gt;C.free(unsafe.Pointer(cs))&lt;/code&gt;. Otherwise, you will have memory leak issues.&lt;/p&gt;
+&lt;p&gt;Furthermore, when some Go source file contains the special import "C" the Go tool looks for .c, .cpp, .cc and others files types in the same source code file directory. Then it compiles them with the default C/C++ compiler.
+So you might do this:&lt;/p&gt;
+&lt;p&gt;writer.go:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
+
+&lt;span class="cm"&gt;/*&lt;/span&gt;
+&lt;span class="cm"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+
+&lt;span class="cm"&gt;extern int finish();&lt;/span&gt;
+&lt;span class="cm"&gt;extern int init(const char* file_name);&lt;/span&gt;
+&lt;span class="cm"&gt;extern int write_file(const char* data, size_t len);&lt;/span&gt;
+&lt;span class="cm"&gt;*/&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;C&amp;quot;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;os&amp;quot;&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;init&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;CString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;os&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Args&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;a&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="k"&gt;range&lt;/span&gt; &lt;span class="nx"&gt;os&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Args&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write_file&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;CString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;\n&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;size_t&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;C&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;finish&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;writer.c:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+
+&lt;span class="kt"&gt;FILE&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;finish&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;fflush&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;fclose&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;init&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;file_name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
+        &lt;span class="n"&gt;finish&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="n"&gt;file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;fopen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;file_name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;w+&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;write_file&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;size_t&lt;/span&gt; &lt;span class="n"&gt;len&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
+        &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;File is not open&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fwrite&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;sizeof&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;len&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error on writing...&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h4&gt;Note&lt;/h4&gt;
+&lt;p&gt;This post is very, very, very simple. If you would like know more see the references below.&lt;/p&gt;
+&lt;h5&gt;References&lt;/h5&gt;
+&lt;p&gt;&lt;a href="https://golang.org/cmd/cgo/"&gt;cgo&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://blog.golang.org/c-go-cgo"&gt;C? Go? Cgo!&lt;/a&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">José Guilherme Vanz</dc:creator><pubDate>Tue, 22 Sep 2015 00:00:00 -0300</pubDate><guid>tag:jvanz.github.com,2015-09-22:cgo-go-lang-with-c.html</guid><category>golang</category><category>cgo</category><category>c</category></item><item><title>Recovering missed data from stash</title><link>http://jvanz.github.com/recovering-missed-data-from-stash.html</link><description>&lt;p&gt;Today my colleague almost lost everything that he did during 4 days! Because  a wrong git command he dropped his changes saved on stash.
+After this sad episode we looked for a way to try to recover as least part of his work... and we did it!&lt;/p&gt;
+&lt;p&gt;First of all, when you are implementing some big feature, split it in small pieces and commit it regularly. It's not a good idea stay so long time without commit your changes,  so take care.&lt;/p&gt;
+&lt;p&gt;Let's simulate a scenario to show what you can do when you lost some changes dropped from stash.
+On our repository we have only one source file, main.c. We will use it to demonstrate the problem and the solution... so, our repository now is been like this:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_01.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;and he have only an commit, the initial commit:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_02.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;The first version of out file is:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_03.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;So, let's start to code something. For this example, we do not need some big change, is only something to put in the stash. For this, I just will add a new line. The git-diff output should be:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_04.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;Now, suppose that you have to pull some new changes from remote repository and you do not want to commit you changes. Thus, you decided to stashed your changes, pull the changes from remote repository
+and apply your changes again on the master.  For this, you execute the following command to move your changes to stash:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;git stash&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Looking into the stash we can see our changes there:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_06.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;Now our code is in a safe place and the master branch is clean ( check with &lt;code&gt;git status&lt;/code&gt;) and you can pull the changes. After pulled the changes, it's time to apply your changes again on the master.
+But accidentally you execute&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;git stash drop&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;instead of:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;git stash pop&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;and now, if you execute &lt;code&gt;git stash list&lt;/code&gt; again, you can see that you dropped changes from the stash and does not apply them again on the master branch. OMG! Who can help us?
+As you will seen soon git did not delete the object that contains your changes. It just remove the reference to it.
+To prove this you can used the &lt;code&gt;git-fsck&lt;/code&gt; command, this command verifies the connectivity and validity of the objects in the database.
+On the begin of the repository I executed the &lt;code&gt;git-fsck&lt;/code&gt; command and the output were:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_07.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;Basically, I asked &lt;code&gt;git-fsck&lt;/code&gt; show me the objects that are unreachable ( &lt;code&gt;--unreachable&lt;/code&gt; argument ). As you can see, it didn't show any unreachable object.
+After I dropped the changes on my stash I executed the same command, and the output was different:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_08.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;Now, we can see 3 unreachable objects. But which is our changes? Actually, I don't know. We have to search for it, for this job you can execute the &lt;code&gt;git-show&lt;/code&gt; command for visualize what are each objects.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/missing_data_from_stash_09.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;There it is! The ID 95ccbd927ad4cd413ee2a28014c81454f4ede82c is our changes. Ok, we found your missed changes. Let's recover it!
+An possible solution is checkout the ID into a new branch or apply the commit directly. Once you have the ID of the object with your changes is up to you decide what is the best way to put changes on the master branch again.
+For this example I will use the &lt;code&gt;git-stash&lt;/code&gt; to apply the commit on my master branch again.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;git stash apply 95ccbd927ad4cd413ee2a28014c81454f4ede82c&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;A important thing to remember, git run its garbage collector periodically. After the gc execution you cannot see more the unreachable objects using &lt;code&gt;git-fsck&lt;/code&gt;. ;)&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">José Guilherme Vanz</dc:creator><pubDate>Sat, 15 Feb 2014 00:00:00 -0200</pubDate><guid>tag:jvanz.github.com,2014-02-15:recovering-missed-data-from-stash.html</guid><category>git</category></item><item><title>From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg</title><link>http://jvanz.github.com/from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html</link><description>&lt;p&gt;While I have not decided what it will be my first post about development stuff I'll post the text that me and my friend wrote to the The Document Foundation's blog. In that text we talked about out trip to LibreOffice hackfest in freiburg.
+From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg&lt;/p&gt;
+&lt;p&gt;José Guilherme Vanz and Marcos Souza, LibreOffice development in Brazil&lt;/p&gt;
+&lt;p&gt;Our first contact with the LibreOffice was in FISL 2012 (International Forum of Free Software, held in Porto Alegre, Brazil). Since then, we got quickly involved with the LibreOffice development community. Now we attend events in Brazil advocating to people about the better office suite ever done!
+Months ago, after some time contributing to the project and participating in LibreOffice community, we, José Guilherme Vanz and Marcos Paulo de Souza were invited to participate in the Freiburg LibreOffice Hackfest. We were very happy and very excited! This invitation showed us that we were recognized for our humble work in the project and because this is a unique opportunity to work with people that we just know by mailing or IRC chats. So, we started the preparations of travel, such as paperwork, funds and a negotiation with our employers.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/hackfest_01.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;We arrived in Germany thinking about how to learn more about LibreOffice code base, and learn some tips and tricks to code while contributing with the project. The guys at the hackfest work full time in the project, so we were very excited to improve our skills, including stuffs about how to make a nice hackfest and try setup one in Brazil!
+Our journey in Germany began in the beautiful city of Munich, where we stayed for two days. We met Christian Lohmaier, the current release engineer of LibreOffice project. He and Florian Effenberger were patient and generous to show Munich to us and all nice places of this nice city! Thanks a lot guys!
+Then we went to Freiburg, where the Hackfest was to start. The event took three days. We had the opportunity to meet some of the most famous mega developers! It was a very nice experience to link faces and names to IRC nicks, and of course, to question the “pythons” of the project in real time! Surely, we learned a lot in these 3 days!
+Marcos did some work in LibreOffice Math. The first was about including tooltips in the new Elements Dock. To solve this bug, we basically need to create some strings with the descriptions of each element in the Elements Dock. These strings are stored inside “.src” files. These files are “compiled” and used by translators to translate each string to a specific language used in the user interface of LibreOffice. This fix was not difficult, just painful!
+The second bug that Marcos worked was about to implement a scrollbar in the Elements Dock. We did not finish this fix because he had some doubts and some points that need some other fixes. Still in the event, we talked with some others hackers about other issues.
+I was focused trying to execute a static checker to detect some error prone code and fix them&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/hackfest_02.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;After three days of hackfest, we started the “Hamburg Home Hacking Marathon”! We stayed four days in Hamburg, coding in the house of LibreOffice enginners! Again, we had the pleasure to work with Eike Ratke, Michael Stahl, Stephan Bergmann and Bjoern Michaelsen. All of them willing to help us teaching about the code base and showing some tips.
+Using our precious time with them, Marcos worked in the issue 60698 (https://bugs.freedesktop.org/show_bug.cgi?id=60698). This bug is about unify some shared libraries that are built by few files. Doing this we get a smaller library because these libraries are compiled and built just once, and by this we avoid the dispersion of shared libraries. Working in this bug, Marcos unified all shared libraries of IO module.
+Marcos tried yet to solve a bug in Calc, with the help of Eike as mentor. This bug was about ODS files using link to another sheets. By changing the referenced files, Calc was not allowed to update the data inside the file that was referencing. But, this bug was not so easy, and the problem was bigger than we thought. So we couldn’t solve this bug in that time, and Eike removed the bug from the easy hacks.
+And I was still working in static checker. I started to look to a bug of Math, about the user interface. After some work, I fixed that bug!
+In the third day, we went back to Stephan’s place, trying to solve bugs and learn more! This day Bjoern went to Stephan’s house too, totaling six guys programming in the same table! In this day Marcos worked in a bug(https://bugs.freedesktop.org/show_bug.cgi?id=63020) indicated by Bjoern. That bug was related to removing a class from LibreOffice. With Stephan’s help, Marcos could remove that class and use a better approach in the code.
+And in the last day, we went again to Eike’s home, where we enjoyed to last moments with the great developers of LibreOffice! We talked a little about their work and how they work daily.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="http://jvanz.github.com/images/hackfest_02.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;For sure, these days were very fruitful, and we learned a lot of things that we’ll use in the future.
+We came back to Brazil and we want to say a big THANK YOU for all of you guys! To the  Brazilian community, that welcomed us and keeps helping us. To The Document Foundation, who gave us this opportunity. To all developers that are helping us since we started in the project, specially YOU we met this wonderful German journey, and all people involved directly or indirectly in this amazing project!&lt;/p&gt;
+&lt;p&gt;Source: http://blog.documentfoundation.org/2013/12/04/from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg/&lt;/p&gt;
+&lt;p&gt;Portuguese version: http://blog.pt-br.libreoffice.org/2013/12/09/do-brasil-para-a-alemanha-um-inesquecivel-hackfest-em-freiburg/&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">José Guilherme Vanz</dc:creator><pubDate>Fri, 24 Jan 2014 00:00:00 -0200</pubDate><guid>tag:jvanz.github.com,2014-01-24:from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html</guid><category>hackfest</category><category>libreoffice</category><category>travel</category><category>germany</category></item></channel></rss>

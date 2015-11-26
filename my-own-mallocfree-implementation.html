@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<link href="http://gmpg.org/xfn/11" rel="profile">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+		<!-- Enable responsiveness on mobile devices-->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+		<title>vanz</title>
+
+		<!-- CSS -->
+		<link href="//fonts.googleapis.com/" rel="dns-prefetch">
+		<link href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Abril+Fatface|PT+Sans:400,400italic,700&amp;subset=latin,latin-ext" rel="stylesheet">
+
+		<link rel="stylesheet" href="/theme/css/poole.css" />
+		<link rel="stylesheet" href="/theme/css/hyde.css" />
+		<link rel="stylesheet" href="/theme/css/syntax.css" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+
+		<!-- RSS -->
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+	</head>
+
+	<body class="theme-base-0d">
+<div class="sidebar">
+	<div class="container sidebar-sticky">
+		<div class="sidebar-about">
+
+			<h1>
+				<a href="/">
+					<img class="profile-picture" src="/images/avatar.jpg">
+					vanz
+				</a>
+			</h1>
+			<p class="lead"></p>
+			<p class="lead">I'm José Guilherme Vanz, from south Brazil. Working as Software Engineer. I love Open Source and programming </p>
+			<p></p>
+		</div>
+		<nav class="sidebar-nav">
+			<a class="sidebar-nav-item" href="mailto:guilherme.sft@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			<a class="sidebar-nav-item" href="https://twitter.com/vanzstuff">
+				<i class="fa fa-twitter"></i>
+			</a>
+			<a class="sidebar-nav-item" href="https://br.linkedin.com/in/jvanz">
+				<i class="fa fa-linkedin"></i>
+			</a>
+			<a class="sidebar-nav-item" href="https://github.com/jvanz">
+				<i class="fa fa-github"></i>
+			</a>
+			<a class="sidebar-nav-item" href="None">
+				<i class="fa fa-feed"></i>
+			</a>
+		</nav>
+	</div>
+</div>		<div class="content container">
+<div class="post">
+	<h1 class="post-title">My own malloc/free implementation</h1>
+	<span class="post-date">Thu 26 November 2015</span>
+	<p>Some time ago I bought the The Linux Programming Interface book, one of the best books I have bought.
+One of the first chapters I read were about memory allocation. At the end of the chapter, author offers some exercises
+to the reader. Among them there is a challenging one. He suggests to implement the equivalent to the malloc and free
+functions. The challenge has been accepted!</p>
+<p>First of all, this implementation is just for study purposes. It is mean you should NOT start to implement your malloc and free functions
+for production programs. Do not reinvent the wheel! The glibc are being improved for decades for many great guys. You probably
+will take the same or more time to do the equivalent excellent work! ;)</p>
+<p>I assume that you know a little bit about how a process works and its data, text, heap, stack segments.</p>
+<h3>System calls</h3>
+<p>There are two system calls allows the program to increase the program break, <code>brk</code> and <code>sbrk</code>. The program break defines
+where is the end of process's data segment. It means if the program increases the program break, memory is allocated.
+Otherwise, it deallocate memory. In this code only <code>sbrk</code> is used, its only parameter defines the amount of memory program wants
+to increase. If the program break has being increased successfully, a pointer to the beginning of the allocated memory is
+returned. Otherwise, (void*) -1 is returned. <code>brk</code> is not being used allows the program set the end of data segment to
+the pointer passed in the functions arguments. I think I did not use this function because my code do not decrease the
+program break. Maybe in the future I implement this feature and use the <code>brk</code> system call.</p>
+<h3>Code</h3>
+<p>The cornerstone of the code is a linked list, called <code>free_list</code>. It keeps all available memories blocks. Each element is
+composed for a header and the memory itself. The header is a structure to store two metadata. The first field of the
+struct is block's size and the second is the next memory block in the <code>free_list</code>. The first thing necessary when a program
+request some memory is check if the <code>free_list</code> is already initialized. If not, it is initiated with a block of 0 size.
+This is done to keep the first element in the list always the same.Thus, it is more easy to know when stop a loop through
+the list and reduce the code complexity.</p>
+<p>Once <code>free_list</code> initiated, a search in the list is performed. Looking for a memory block with enough size to attempt the
+request. The algorithm follows the 'first fit' approach. It means that the first memory block found with
+enough size is split  and returned a pointer to the memory to the caller. If any block
+has enough size, the heap is increased and the new memory is returned. The pointer returned to the user is a pointer
+to the memory block itself. It is not include the header. Does not make sense give access to the control structures for
+the caller program. This structure is used only for memory management and to know what is the memory block size when the
+program wants to free it.</p>
+<p>As you will see soon in the code, all memory blocks are multiple of the header size. It means the minimum
+memory size allocated is the HEADER_SIZE * 2 (with the header). This approach facilitate the pointer arithmetic and avoid
+counting every single byte. In other words, even if the user requests less memory, the allocated memory will be always
+multiple of the HEADER_SIZE.</p>
+<p>When the user wants to free a pointer, another search in the free_list is performed. This time, looking for a memory block
+next the to the block is being freed. If a block is found, the two blocks are merged into one. Otherwise, the block is
+appended in the list. The goal of merge close blocks is avoid memory fragmentation. ;)</p>
+<p>Well, let's take a look in the code! Thus you can see all the implementation details.</p>
+<div class="gist">
+    <script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.h'></script>
+    <noscript>
+        <pre><code>#ifndef _MEMORY_HEADER
+#define  _MEMORY_HEADER
+
+/**
+ * Allocates a block of memory with bytes of length
+ * @returns a pointer to the allocated block of memory. Return NULL in error
+ */
+void* memory_alloc(size_t bytes);
+
+/**
+ * Deallocates the ptr block of memory
+ * @returns 0 on success
+ */
+void memory_free(void* ptr);
+
+#endif</code></pre>
+    </noscript>
+</div>
+<div class="gist">
+    <script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.c'></script>
+    <noscript>
+        <pre><code>/**
+ * This source code contains a simple malloc and free functions implementation.
+ * It was created just for study purposes
+ */
+#include <unistd.h>
+#include "memory.h"
+
+#define HEADER_SIZE sizeof(Header)
+#define NUNITS(bytes) bytes / HEADER_SIZE
+
+struct header {
+	unsigned int size; //memory block size in bytes
+	struct header *next; //next memory block in the free list
+};
+typedef struct header Header;
+
+static Header* increase_heap(unsigned int);
+
+static Header *free_list = NULL;
+static Header base;
+
+void* memory_alloc(size_t bytes)
+{
+	Header *block;
+	Header *previous = &base;
+	unsigned int nunits = NUNITS(bytes);
+	if(!nunits)
+		nunits = 1;
+	if(!free_list){
+		//first call
+		Header *block = increase_heap(nunits);
+		block->next = &base;
+		base.size = 0;
+		base.next = block;
+		free_list = &base;
+	}
+	//look for a memory block with enough size
+	for(block = base.next; block != &base; previous = block, block = block->next ){
+		if(nunits <= block->size){
+			if(nunits == block->size){ //the current memory block has exactly size! \o/
+				previous->next = block->next;
+				block->next = NULL;
+				return block + 1;
+			}
+			//the block is bigger. Let's split it
+			Header *remain_block = block + 1 + nunits;
+			remain_block->size = block->size - 1 - nunits;
+			remain_block->next = block->next;
+			previous->next = remain_block;
+			block->size = nunits;
+			return block + 1;
+		}
+	}
+	//need more memory
+	block = increase_heap(nunits);
+	return block + 1;
+}
+
+void memory_free(void* ptr)
+{
+	Header *fblock = ((Header*)ptr) - 1;
+	Header *block;
+	Header *previous = &base;
+	for(block = base.next; block != &base; previous = block, block = block->next){
+		//let's find an adjacent memory block
+		if((block + 1 + block->size) == fblock){
+			block->size += fblock->size;
+			ptr = NULL;
+			return;
+		} else if((fblock + 1 + fblock->size) == block){
+			fblock->size += block->size + 1;
+			fblock->next = block->next;
+			previous->next = fblock;
+			ptr = NULL;
+			return;
+		}
+	}
+	previous->next = fblock;
+	fblock->next = &base;
+	ptr = NULL;
+}
+
+Header* increase_heap(unsigned int units)
+{
+#define MIN_ALLOC HEADER_SIZE * 2
+	Header *block;
+	if(units <= 1)
+		block = (Header*) sbrk(MIN_ALLOC);
+	else
+		block = (Header*) sbrk( (1 + units) * HEADER_SIZE);
+	block->size = units;
+	block->next = NULL;
+	return block;
+}</code></pre>
+    </noscript>
+</div>
+<div class="gist">
+    <script src='https://gist.github.com/869420fb87353049d4d7.js?file=sample.c'></script>
+    <noscript>
+        <pre><code>#include <stdio.h>
+#include <stdlib.h>
+#include <memory/memory.h>
+
+#define LOOP 10
+#define ARRAY_LENGTH 10
+
+struct ordinary {
+	int a;
+	float b;
+	double c;
+	long d;
+	char e;
+	void *f;
+};
+
+int main(){
+	memory_free(memory_alloc(2048));
+	int *i = (int*) memory_alloc(sizeof(int));
+	int *i2 = (int*) memory_alloc(sizeof(int));
+	*i = 2;
+	*i2 = 100;
+	printf("%d + %d = %d\n", *i, *i2, *i + *i2);
+	memory_free(i2);
+	memory_free(i);
+	i = (int*) memory_alloc(sizeof(int));
+	*i = 0;
+	unsigned int index = 0;
+	for(index = 0; index < LOOP; index++ ){
+		int *int_ptr = (int*) memory_alloc(sizeof(int));
+		*int_ptr = index;
+		*i += *int_ptr;
+		memory_free(int_ptr);
+	}
+	printf("The sum of 0 until %d is %d\n", LOOP, *i);
+	memory_free(memory_alloc(2048));
+	memory_free(memory_alloc(2048));
+	memory_free(memory_alloc(2048 * 5));
+	struct ordinary *op =  (struct ordinary*) memory_alloc(sizeof(struct ordinary));
+	op->a = 1;
+	op->b = 1.0f;
+	op->c = 9.99;
+	op->d = 999l;
+	op->e = 'a';
+	op->f = i;
+	printf("a = %d, b = %f, c = %f, d = %ld, e = %c, f = %p\n", op->a, op->b, op->c, op->d, op->e, op->f);
+	memory_free(op);
+	int *ia = (int*) memory_alloc(sizeof(int) * ARRAY_LENGTH);
+	for(index = 0; index < ARRAY_LENGTH; ++index){
+		ia[index] = index * 2;
+	}
+	printf("[ ");
+	for(index = 0; index < ARRAY_LENGTH; ++index){
+		if(index < ARRAY_LENGTH -1)
+			printf("%d, ", ia[index]);
+		else
+			printf("%d", ia[index]);
+	}
+	printf(" ]\n");
+	memory_free(ia);
+	exit(EXIT_SUCCESS);
+}</code></pre>
+    </noscript>
+</div>
+<p>The last source code is a simple sample program using the functions described before.</p>
+<p>Feel free to ask me in the comments. =]</p>
+<h4>References</h4>
+<p><a href="http://linux.die.net/man/2/sbrk">brk, sbrk</a></p>
+<p><a href="http://www.amazon.com/Linux-Programming-Interface-System-Handbook/dp/1593272200/ref=sr_1_1?s=books&amp;ie=UTF8&amp;qid=1448501399&amp;sr=1-1&amp;keywords=the+linux+programming+interface">The Linux Programing Interface</a></p>
+<p><a href="http://www.amazon.com/Programming-Language-Brian-W-Kernighan/dp/0131103628/ref=sr_1_1?s=books&amp;ie=UTF8&amp;qid=1448501445&amp;sr=1-1&amp;keywords=the+c+programming+language">The C Programming Language</a></p>
+	<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_shortname = 'jvanz';
+			(function() {
+	 			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	 			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	 			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	 		})();
+		</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</div>
+		</div>
+	</body>
+</html>

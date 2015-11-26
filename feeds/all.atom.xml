@@ -1,5 +1,235 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2015-09-22T00:00:00-03:00</updated><entry><title>cgo: Go lang with C</title><link href="/cgo-go-lang-with-c.html" rel="alternate"></link><published>2015-09-22T00:00:00-03:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2015-09-22:cgo-go-lang-with-c.html</id><summary type="html">&lt;p&gt;Some weeks ago I had to customize the &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt; to integrate it with some libraries written and C.
+<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2015-11-26T00:08:00-02:00</updated><entry><title>My own malloc/free implementation</title><link href="/my-own-mallocfree-implementation.html" rel="alternate"></link><published>2015-11-26T00:08:00-02:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2015-11-26:my-own-mallocfree-implementation.html</id><summary type="html">&lt;p&gt;Some time ago I bought the The Linux Programming Interface book, one of the best books I have bought.
+One of the first chapters I read were about memory allocation. At the end of the chapter, author offers some exercises
+to the reader. Among them there is a challenging one. He suggests to implement the equivalent to the malloc and free
+functions. The challenge has been accepted!&lt;/p&gt;
+&lt;p&gt;First of all, this implementation is just for study purposes. It is mean you should NOT start to implement your malloc and free functions
+for production programs. Do not reinvent the wheel! The glibc are being improved for decades for many great guys. You probably
+will take the same or more time to do the equivalent excellent work! ;)&lt;/p&gt;
+&lt;p&gt;I assume that you know a little bit about how a process works and its data, text, heap, stack segments.&lt;/p&gt;
+&lt;h3&gt;System calls&lt;/h3&gt;
+&lt;p&gt;There are two system calls allows the program to increase the program break, &lt;code&gt;brk&lt;/code&gt; and &lt;code&gt;sbrk&lt;/code&gt;. The program break defines
+where is the end of process's data segment. It means if the program increases the program break, memory is allocated.
+Otherwise, it deallocate memory. In this code only &lt;code&gt;sbrk&lt;/code&gt; is used, its only parameter defines the amount of memory program wants
+to increase. If the program break has being increased successfully, a pointer to the beginning of the allocated memory is
+returned. Otherwise, (void*) -1 is returned. &lt;code&gt;brk&lt;/code&gt; is not being used allows the program set the end of data segment to
+the pointer passed in the functions arguments. I think I did not use this function because my code do not decrease the
+program break. Maybe in the future I implement this feature and use the &lt;code&gt;brk&lt;/code&gt; system call.&lt;/p&gt;
+&lt;h3&gt;Code&lt;/h3&gt;
+&lt;p&gt;The cornerstone of the code is a linked list, called &lt;code&gt;free_list&lt;/code&gt;. It keeps all available memories blocks. Each element is
+composed for a header and the memory itself. The header is a structure to store two metadata. The first field of the
+struct is block's size and the second is the next memory block in the &lt;code&gt;free_list&lt;/code&gt;. The first thing necessary when a program
+request some memory is check if the &lt;code&gt;free_list&lt;/code&gt; is already initialized. If not, it is initiated with a block of 0 size.
+This is done to keep the first element in the list always the same.Thus, it is more easy to know when stop a loop through
+the list and reduce the code complexity.&lt;/p&gt;
+&lt;p&gt;Once &lt;code&gt;free_list&lt;/code&gt; initiated, a search in the list is performed. Looking for a memory block with enough size to attempt the
+request. The algorithm follows the 'first fit' approach. It means that the first memory block found with
+enough size is split  and returned a pointer to the memory to the caller. If any block
+has enough size, the heap is increased and the new memory is returned. The pointer returned to the user is a pointer
+to the memory block itself. It is not include the header. Does not make sense give access to the control structures for
+the caller program. This structure is used only for memory management and to know what is the memory block size when the
+program wants to free it.&lt;/p&gt;
+&lt;p&gt;As you will see soon in the code, all memory blocks are multiple of the header size. It means the minimum
+memory size allocated is the HEADER_SIZE * 2 (with the header). This approach facilitate the pointer arithmetic and avoid
+counting every single byte. In other words, even if the user requests less memory, the allocated memory will be always
+multiple of the HEADER_SIZE.&lt;/p&gt;
+&lt;p&gt;When the user wants to free a pointer, another search in the free_list is performed. This time, looking for a memory block
+next the to the block is being freed. If a block is found, the two blocks are merged into one. Otherwise, the block is
+appended in the list. The goal of merge close blocks is avoid memory fragmentation. ;)&lt;/p&gt;
+&lt;p&gt;Well, let's take a look in the code! Thus you can see all the implementation details.&lt;/p&gt;
+&lt;div class="gist"&gt;
+    &lt;script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.h'&gt;&lt;/script&gt;
+    &lt;noscript&gt;
+        &lt;pre&gt;&lt;code&gt;#ifndef _MEMORY_HEADER
+#define  _MEMORY_HEADER
+
+/**
+ * Allocates a block of memory with bytes of length
+ * @returns a pointer to the allocated block of memory. Return NULL in error
+ */
+void* memory_alloc(size_t bytes);
+
+/**
+ * Deallocates the ptr block of memory
+ * @returns 0 on success
+ */
+void memory_free(void* ptr);
+
+#endif&lt;/code&gt;&lt;/pre&gt;
+    &lt;/noscript&gt;
+&lt;/div&gt;
+&lt;div class="gist"&gt;
+    &lt;script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.c'&gt;&lt;/script&gt;
+    &lt;noscript&gt;
+        &lt;pre&gt;&lt;code&gt;/**
+ * This source code contains a simple malloc and free functions implementation.
+ * It was created just for study purposes
+ */
+#include &lt;unistd.h&gt;
+#include "memory.h"
+
+#define HEADER_SIZE sizeof(Header)
+#define NUNITS(bytes) bytes / HEADER_SIZE
+
+struct header {
+	unsigned int size; //memory block size in bytes
+	struct header *next; //next memory block in the free list
+};
+typedef struct header Header;
+
+static Header* increase_heap(unsigned int);
+
+static Header *free_list = NULL;
+static Header base;
+
+void* memory_alloc(size_t bytes)
+{
+	Header *block;
+	Header *previous = &amp;base;
+	unsigned int nunits = NUNITS(bytes);
+	if(!nunits)
+		nunits = 1;
+	if(!free_list){
+		//first call
+		Header *block = increase_heap(nunits);
+		block-&gt;next = &amp;base;
+		base.size = 0;
+		base.next = block;
+		free_list = &amp;base;
+	}
+	//look for a memory block with enough size
+	for(block = base.next; block != &amp;base; previous = block, block = block-&gt;next ){
+		if(nunits &lt;= block-&gt;size){
+			if(nunits == block-&gt;size){ //the current memory block has exactly size! \o/
+				previous-&gt;next = block-&gt;next;
+				block-&gt;next = NULL;
+				return block + 1;
+			}
+			//the block is bigger. Let's split it
+			Header *remain_block = block + 1 + nunits;
+			remain_block-&gt;size = block-&gt;size - 1 - nunits;
+			remain_block-&gt;next = block-&gt;next;
+			previous-&gt;next = remain_block;
+			block-&gt;size = nunits;
+			return block + 1;
+		}
+	}
+	//need more memory
+	block = increase_heap(nunits);
+	return block + 1;
+}
+
+void memory_free(void* ptr)
+{
+	Header *fblock = ((Header*)ptr) - 1;
+	Header *block;
+	Header *previous = &amp;base;
+	for(block = base.next; block != &amp;base; previous = block, block = block-&gt;next){
+		//let's find an adjacent memory block
+		if((block + 1 + block-&gt;size) == fblock){
+			block-&gt;size += fblock-&gt;size;
+			ptr = NULL;
+			return;
+		} else if((fblock + 1 + fblock-&gt;size) == block){
+			fblock-&gt;size += block-&gt;size + 1;
+			fblock-&gt;next = block-&gt;next;
+			previous-&gt;next = fblock;
+			ptr = NULL;
+			return;
+		}
+	}
+	previous-&gt;next = fblock;
+	fblock-&gt;next = &amp;base;
+	ptr = NULL;
+}
+
+Header* increase_heap(unsigned int units)
+{
+#define MIN_ALLOC HEADER_SIZE * 2
+	Header *block;
+	if(units &lt;= 1)
+		block = (Header*) sbrk(MIN_ALLOC);
+	else
+		block = (Header*) sbrk( (1 + units) * HEADER_SIZE);
+	block-&gt;size = units;
+	block-&gt;next = NULL;
+	return block;
+}&lt;/code&gt;&lt;/pre&gt;
+    &lt;/noscript&gt;
+&lt;/div&gt;
+&lt;div class="gist"&gt;
+    &lt;script src='https://gist.github.com/869420fb87353049d4d7.js?file=sample.c'&gt;&lt;/script&gt;
+    &lt;noscript&gt;
+        &lt;pre&gt;&lt;code&gt;#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;memory/memory.h&gt;
+
+#define LOOP 10
+#define ARRAY_LENGTH 10
+
+struct ordinary {
+	int a;
+	float b;
+	double c;
+	long d;
+	char e;
+	void *f;
+};
+
+int main(){
+	memory_free(memory_alloc(2048));
+	int *i = (int*) memory_alloc(sizeof(int));
+	int *i2 = (int*) memory_alloc(sizeof(int));
+	*i = 2;
+	*i2 = 100;
+	printf("%d + %d = %d\n", *i, *i2, *i + *i2);
+	memory_free(i2);
+	memory_free(i);
+	i = (int*) memory_alloc(sizeof(int));
+	*i = 0;
+	unsigned int index = 0;
+	for(index = 0; index &lt; LOOP; index++ ){
+		int *int_ptr = (int*) memory_alloc(sizeof(int));
+		*int_ptr = index;
+		*i += *int_ptr;
+		memory_free(int_ptr);
+	}
+	printf("The sum of 0 until %d is %d\n", LOOP, *i);
+	memory_free(memory_alloc(2048));
+	memory_free(memory_alloc(2048));
+	memory_free(memory_alloc(2048 * 5));
+	struct ordinary *op =  (struct ordinary*) memory_alloc(sizeof(struct ordinary));
+	op-&gt;a = 1;
+	op-&gt;b = 1.0f;
+	op-&gt;c = 9.99;
+	op-&gt;d = 999l;
+	op-&gt;e = 'a';
+	op-&gt;f = i;
+	printf("a = %d, b = %f, c = %f, d = %ld, e = %c, f = %p\n", op-&gt;a, op-&gt;b, op-&gt;c, op-&gt;d, op-&gt;e, op-&gt;f);
+	memory_free(op);
+	int *ia = (int*) memory_alloc(sizeof(int) * ARRAY_LENGTH);
+	for(index = 0; index &lt; ARRAY_LENGTH; ++index){
+		ia[index] = index * 2;
+	}
+	printf("[ ");
+	for(index = 0; index &lt; ARRAY_LENGTH; ++index){
+		if(index &lt; ARRAY_LENGTH -1)
+			printf("%d, ", ia[index]);
+		else
+			printf("%d", ia[index]);
+	}
+	printf(" ]\n");
+	memory_free(ia);
+	exit(EXIT_SUCCESS);
+}&lt;/code&gt;&lt;/pre&gt;
+    &lt;/noscript&gt;
+&lt;/div&gt;
+&lt;p&gt;The last source code is a simple sample program using the functions described before.&lt;/p&gt;
+&lt;p&gt;Feel free to ask me in the comments. =]&lt;/p&gt;
+&lt;h4&gt;References&lt;/h4&gt;
+&lt;p&gt;&lt;a href="http://linux.die.net/man/2/sbrk"&gt;brk, sbrk&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://www.amazon.com/Linux-Programming-Interface-System-Handbook/dp/1593272200/ref=sr_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1448501399&amp;amp;sr=1-1&amp;amp;keywords=the+linux+programming+interface"&gt;The Linux Programing Interface&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://www.amazon.com/Programming-Language-Brian-W-Kernighan/dp/0131103628/ref=sr_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1448501445&amp;amp;sr=1-1&amp;amp;keywords=the+c+programming+language"&gt;The C Programming Language&lt;/a&gt;&lt;/p&gt;</summary><category term="c"></category><category term="tlpi"></category><category term="glibc"></category><category term="memory"></category></entry><entry><title>cgo: Go lang with C</title><link href="/cgo-go-lang-with-c.html" rel="alternate"></link><published>2015-09-22T00:00:00-03:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2015-09-22:cgo-go-lang-with-c.html</id><summary type="html">&lt;p&gt;Some weeks ago I had to customize the &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt; to integrate it with some libraries written and C.
 Maybe you already know Docker is written in Go language and to do this task was used &lt;a href="https://golang.org/cmd/cgo/"&gt;cgo&lt;/a&gt;
 Cgo enables integrate Go code with C. It shows itself easier and smooth comparing with my past experiences with JNI&lt;/p&gt;
 &lt;h2&gt;Hello World!&lt;/h2&gt;

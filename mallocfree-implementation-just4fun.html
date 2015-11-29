@@ -58,7 +58,7 @@
 	</div>
 </div>		<div class="content container">
 <div class="post">
-	<h1 class="post-title">My own malloc/free implementation</h1>
+	<h1 class="post-title">malloc/free implementation. Just4Fun!</h1>
 	<span class="post-date">Thu 26 November 2015</span>
 	<p>Some time ago I bought the The Linux Programming Interface book, one of the best books I have acquired.
 One of the first chapters I read were about memory allocation. At the end of the chapter, author offers some exercises
@@ -98,7 +98,7 @@ multiple of the HEADER_SIZE.</p>
 <p>When the user wants to free a pointer, another search in the <code>free_list</code> is performed. This time, looking for a memory block
 next the to the block is being freed. If a block is found, the two blocks are merged into one. Otherwise, the block is
 appended in the list. The goal of merge close blocks is avoid memory fragmentation. ;)</p>
-<p>According to my weak skill in asymptotic analyses, both functions have running time of O(n). Since each functions performed
+<p>According to my weak skill in asymptotic analysis, both functions have running time of O(n). Since each functions performed
 a search in the <code>free_list</code>. Please, tell me if I am wrong. I will study more about this topic and correct if I wrote
 bullshit. Well, let's take a look in the code! Thus you can see all the implementation details.</p>
 <div class="gist">

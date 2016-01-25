@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2015-11-29T11:45:00-02:00</updated><entry><title>malloc/free implementation. Just4Fun!</title><link href="/mallocfree-implementation-just4fun.html" rel="alternate"></link><published>2015-11-29T11:45:00-02:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2015-11-26:mallocfree-implementation-just4fun.html</id><summary type="html">&lt;p&gt;Some time ago I bought the The Linux Programming Interface book, one of the best books I have acquired.
+<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2016-01-24T22:22:00-02:00</updated><entry><title>malloc/free implementation. Just4Fun!</title><link href="/mallocfree-implementation-just4fun.html" rel="alternate"></link><published>2016-01-24T22:22:00-02:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2015-11-26:mallocfree-implementation-just4fun.html</id><summary type="html">&lt;p&gt;Some time ago I bought the The Linux Programming Interface book, one of the best books I have acquired.
 One of the first chapters I read were about memory allocation. At the end of the chapter, author offers some exercises
 to the reader. Among them there is a challenging one. He suggests to implement the equivalent to the malloc and free
 functions. The challenge has been accepted!&lt;/p&gt;
@@ -18,51 +18,8 @@ the pointer passed in the functions arguments. I think this function is not bein
 the program break. Maybe in the future I implement this feature and use the &lt;code&gt;brk&lt;/code&gt; system call.&lt;/p&gt;
 &lt;p&gt;For more details, take a look in the man page. ;)&lt;/p&gt;
 &lt;h3&gt;Code&lt;/h3&gt;
-&lt;p&gt;The cornerstone of the code is a linked list, called &lt;code&gt;free_list&lt;/code&gt;. It stores all available memories blocks. Each element is
-composed for a header and the memory itself. The header is a structure that contains two metadata. The first field of the
-struct is block's size and the second is a pointer to next memory block in the &lt;code&gt;free_list&lt;/code&gt;. The first thing necessary
-when a program request some memory is check if the &lt;code&gt;free_list&lt;/code&gt; is already initialized. If not, it is initiated with a
-block of 0 size. This is done to keep the first element in the list always the same. Thus, it is more easy to know when
-stop a loop through the list and reduce the code complexity.&lt;/p&gt;
-&lt;p&gt;Once &lt;code&gt;free_list&lt;/code&gt; initiated, a search in the list is performed. Looking for a memory block with enough size to attempt the
-request. The algorithm follows the 'first fit' approach. It means that the first memory block found with enough size is
-split  and returned a pointer to the memory to the caller. If any block has enough size, the heap is increased and the
-new memory is returned. The pointer returned to the user is a pointer to the memory block itself. It is not include the
-header. Does not make sense give to caller  access to the control structures. This structure is used only for memory
-management and to know what is the memory block size when the program wants to frees it.&lt;/p&gt;
-&lt;p&gt;As you will see soon in the code, all memory blocks are multiple of the header size. It means the minimum
-memory size allocated is the HEADER_SIZE * 2 (with the header). This approach facilitate the pointer arithmetic and avoid
-counting every single byte. In other words, even if the user requests less memory, the allocated memory will be always
-multiple of the HEADER_SIZE.&lt;/p&gt;
-&lt;p&gt;When the user wants to free a pointer, another search in the &lt;code&gt;free_list&lt;/code&gt; is performed. This time, looking for a memory block
-next the to the block is being freed. If a block is found, the two blocks are merged into one. Otherwise, the block is
-appended in the list. The goal of merge close blocks is avoid memory fragmentation. ;)&lt;/p&gt;
-&lt;p&gt;According to my weak skill in asymptotic analysis, both functions have running time of O(n). Since each functions performed
-a search in the &lt;code&gt;free_list&lt;/code&gt;. Please, tell me if I am wrong. I will study more about this topic and correct if I wrote
-bullshit. Well, let's take a look in the code! Thus you can see all the implementation details.&lt;/p&gt;
 &lt;div class="gist"&gt;
-    &lt;script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.h'&gt;&lt;/script&gt;
-    &lt;noscript&gt;
-        &lt;pre&gt;&lt;code&gt;#ifndef _MEMORY_HEADER
-#define  _MEMORY_HEADER
-
-/**
- * Allocates a block of memory with bytes of length
- * @returns a pointer to the allocated block of memory. Return NULL in error
- */
-void* memory_alloc(size_t bytes);
-
-/**
- * Deallocates the ptr block of memory
- * @returns 0 on success
- */
-void memory_free(void* ptr);
-
-#endif&lt;/code&gt;&lt;/pre&gt;
-    &lt;/noscript&gt;
-&lt;/div&gt;
-&lt;div class="gist"&gt;
-    &lt;script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.c'&gt;&lt;/script&gt;
+    &lt;script src='https://gist.github.com/ba82bdd0dfeb44c260aa.js?file=memory.c'&gt;&lt;/script&gt;
     &lt;noscript&gt;
         &lt;pre&gt;&lt;code&gt;/**
  * This source code contains a simple malloc and free functions implementation.
@@ -160,6 +117,51 @@ Header* increase_heap(unsigned int units)
 }&lt;/code&gt;&lt;/pre&gt;
     &lt;/noscript&gt;
 &lt;/div&gt;
+&lt;p&gt;The cornerstone of the code is a linked list, called &lt;code&gt;free_list&lt;/code&gt;. It stores all available memories blocks. Each element is
+composed for a header and the memory itself. The header is a structure that contains two metadata. The first field of the
+struct is block's size and the second is a pointer to next memory block in the &lt;code&gt;free_list&lt;/code&gt;. The first thing necessary
+when a program request some memory is check if the &lt;code&gt;free_list&lt;/code&gt; is already initialized (line 29). If not, it is initiated
+with a block of 0 size (lines 29 ~ 36). This is done to keep the first element in the list always the same. Thus, it is more easy to know
+when stop a loop through the list and reduce the code complexity.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/mem_init.png" /&gt;&lt;/p&gt;
+&lt;p&gt;Once &lt;code&gt;free_list&lt;/code&gt; initiated, a search in the list is performed. Looking for a memory block with enough size to attempt the
+request. The algorithm follows the 'first fit' approach. It means that the first memory block found with enough size is
+split and returned a pointer to the memory to the caller (lines 38 ~ 53). If any block has enough size, the heap is increased and the
+new memory is returned (line 55). The pointer returned to the user is a pointer to the memory block itself. It is
+not include the header. Does not make sense give to caller  access to the control structures. This structure is used only
+for memory management and to know what is the memory block size when the program wants to frees it.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/one_mem_allocate.png" /&gt;&lt;/p&gt;
+&lt;p&gt;As you can see between lines 26 and 28, all memory blocks are multiple of the header size. It means the minimum
+memory size allocated is the HEADER_SIZE * 2 (with the header). This approach facilitate the pointer arithmetic and avoid
+counting every single byte. In other words, even if the user requests less memory, the allocated memory will be always
+multiple of the HEADER_SIZE.&lt;/p&gt;
+&lt;p&gt;When the user wants to free a pointer, another search in the &lt;code&gt;free_list&lt;/code&gt; is performed. This time, looking for a memory block
+next the to the block is being freed. If a block is found, the two blocks are merged into one (lines 64 ~ 77). Otherwise,
+the block is appended in the list (lines 78 ~ 80). The goal of merge close blocks is avoid memory fragmentation. ;)&lt;/p&gt;
+&lt;p&gt;According to my weak skill in asymptotic analysis, both functions have running time of O(n). Since each functions performed
+a search in the &lt;code&gt;free_list&lt;/code&gt;. Please, tell me if I am wrong. I will study more about this topic and correct if I wrote
+bullshit. The following sources are the header and a test program.&lt;/p&gt;
+&lt;div class="gist"&gt;
+    &lt;script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.h'&gt;&lt;/script&gt;
+    &lt;noscript&gt;
+        &lt;pre&gt;&lt;code&gt;#ifndef _MEMORY_HEADER
+#define  _MEMORY_HEADER
+
+/**
+ * Allocates a block of memory with bytes of length
+ * @returns a pointer to the allocated block of memory. Return NULL in error
+ */
+void* memory_alloc(size_t bytes);
+
+/**
+ * Deallocates the ptr block of memory
+ * @returns 0 on success
+ */
+void memory_free(void* ptr);
+
+#endif&lt;/code&gt;&lt;/pre&gt;
+    &lt;/noscript&gt;
+&lt;/div&gt;
 &lt;div class="gist"&gt;
     &lt;script src='https://gist.github.com/869420fb87353049d4d7.js?file=sample.c'&gt;&lt;/script&gt;
     &lt;noscript&gt;
@@ -227,7 +229,6 @@ int main(){
 }&lt;/code&gt;&lt;/pre&gt;
     &lt;/noscript&gt;
 &lt;/div&gt;
-&lt;p&gt;The last source code is a simple sample program using the functions described before.&lt;/p&gt;
 &lt;p&gt;Feel free to ask me in the comments. =]&lt;/p&gt;
 &lt;h4&gt;References&lt;/h4&gt;
 &lt;p&gt;&lt;a href="http://linux.die.net/man/2/sbrk"&gt;brk, sbrk&lt;/a&gt;&lt;/p&gt;

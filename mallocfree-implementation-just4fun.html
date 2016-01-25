@@ -39,18 +39,18 @@
 			<p></p>
 		</div>
 		<nav class="sidebar-nav">
-			<a class="sidebar-nav-item" href="mailto:guilherme.sft@gmail.com">
-				<i class="fa fa-envelope"></i>
-			</a>
-			<a class="sidebar-nav-item" href="https://twitter.com/vanzstuff">
-				<i class="fa fa-twitter"></i>
-			</a>
-			<a class="sidebar-nav-item" href="https://br.linkedin.com/in/jvanz">
-				<i class="fa fa-linkedin"></i>
-			</a>
-			<a class="sidebar-nav-item" href="https://github.com/jvanz">
-				<i class="fa fa-github"></i>
-			</a>
+					<a class="sidebar-nav-item" href="mailto:guilherme.sft@gmail.com">
+						<i class="fa fa-envelope"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://twitter.com/vanzstuff">
+						<i class="fa fa-twitter"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://br.linkedin.com/in/jvanz">
+						<i class="fa fa-linkedin"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://github.com/jvanz">
+						<i class="fa fa-github"></i>
+					</a>
 			<a class="sidebar-nav-item" href="None">
 				<i class="fa fa-feed"></i>
 			</a>
@@ -79,51 +79,8 @@ the pointer passed in the functions arguments. I think this function is not bein
 the program break. Maybe in the future I implement this feature and use the <code>brk</code> system call.</p>
 <p>For more details, take a look in the man page. ;)</p>
 <h3>Code</h3>
-<p>The cornerstone of the code is a linked list, called <code>free_list</code>. It stores all available memories blocks. Each element is
-composed for a header and the memory itself. The header is a structure that contains two metadata. The first field of the
-struct is block's size and the second is a pointer to next memory block in the <code>free_list</code>. The first thing necessary
-when a program request some memory is check if the <code>free_list</code> is already initialized. If not, it is initiated with a
-block of 0 size. This is done to keep the first element in the list always the same. Thus, it is more easy to know when
-stop a loop through the list and reduce the code complexity.</p>
-<p>Once <code>free_list</code> initiated, a search in the list is performed. Looking for a memory block with enough size to attempt the
-request. The algorithm follows the 'first fit' approach. It means that the first memory block found with enough size is
-split  and returned a pointer to the memory to the caller. If any block has enough size, the heap is increased and the
-new memory is returned. The pointer returned to the user is a pointer to the memory block itself. It is not include the
-header. Does not make sense give to caller  access to the control structures. This structure is used only for memory
-management and to know what is the memory block size when the program wants to frees it.</p>
-<p>As you will see soon in the code, all memory blocks are multiple of the header size. It means the minimum
-memory size allocated is the HEADER_SIZE * 2 (with the header). This approach facilitate the pointer arithmetic and avoid
-counting every single byte. In other words, even if the user requests less memory, the allocated memory will be always
-multiple of the HEADER_SIZE.</p>
-<p>When the user wants to free a pointer, another search in the <code>free_list</code> is performed. This time, looking for a memory block
-next the to the block is being freed. If a block is found, the two blocks are merged into one. Otherwise, the block is
-appended in the list. The goal of merge close blocks is avoid memory fragmentation. ;)</p>
-<p>According to my weak skill in asymptotic analysis, both functions have running time of O(n). Since each functions performed
-a search in the <code>free_list</code>. Please, tell me if I am wrong. I will study more about this topic and correct if I wrote
-bullshit. Well, let's take a look in the code! Thus you can see all the implementation details.</p>
 <div class="gist">
-    <script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.h'></script>
-    <noscript>
-        <pre><code>#ifndef _MEMORY_HEADER
-#define  _MEMORY_HEADER
-
-/**
- * Allocates a block of memory with bytes of length
- * @returns a pointer to the allocated block of memory. Return NULL in error
- */
-void* memory_alloc(size_t bytes);
-
-/**
- * Deallocates the ptr block of memory
- * @returns 0 on success
- */
-void memory_free(void* ptr);
-
-#endif</code></pre>
-    </noscript>
-</div>
-<div class="gist">
-    <script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.c'></script>
+    <script src='https://gist.github.com/ba82bdd0dfeb44c260aa.js?file=memory.c'></script>
     <noscript>
         <pre><code>/**
  * This source code contains a simple malloc and free functions implementation.
@@ -221,6 +178,51 @@ Header* increase_heap(unsigned int units)
 }</code></pre>
     </noscript>
 </div>
+<p>The cornerstone of the code is a linked list, called <code>free_list</code>. It stores all available memories blocks. Each element is
+composed for a header and the memory itself. The header is a structure that contains two metadata. The first field of the
+struct is block's size and the second is a pointer to next memory block in the <code>free_list</code>. The first thing necessary
+when a program request some memory is check if the <code>free_list</code> is already initialized (line 29). If not, it is initiated
+with a block of 0 size (lines 29 ~ 36). This is done to keep the first element in the list always the same. Thus, it is more easy to know
+when stop a loop through the list and reduce the code complexity.</p>
+<p><img alt="" src="/images/mem_init.png" /></p>
+<p>Once <code>free_list</code> initiated, a search in the list is performed. Looking for a memory block with enough size to attempt the
+request. The algorithm follows the 'first fit' approach. It means that the first memory block found with enough size is
+split and returned a pointer to the memory to the caller (lines 38 ~ 53). If any block has enough size, the heap is increased and the
+new memory is returned (line 55). The pointer returned to the user is a pointer to the memory block itself. It is
+not include the header. Does not make sense give to caller  access to the control structures. This structure is used only
+for memory management and to know what is the memory block size when the program wants to frees it.</p>
+<p><img alt="" src="/images/one_mem_allocate.png" /></p>
+<p>As you can see between lines 26 and 28, all memory blocks are multiple of the header size. It means the minimum
+memory size allocated is the HEADER_SIZE * 2 (with the header). This approach facilitate the pointer arithmetic and avoid
+counting every single byte. In other words, even if the user requests less memory, the allocated memory will be always
+multiple of the HEADER_SIZE.</p>
+<p>When the user wants to free a pointer, another search in the <code>free_list</code> is performed. This time, looking for a memory block
+next the to the block is being freed. If a block is found, the two blocks are merged into one (lines 64 ~ 77). Otherwise,
+the block is appended in the list (lines 78 ~ 80). The goal of merge close blocks is avoid memory fragmentation. ;)</p>
+<p>According to my weak skill in asymptotic analysis, both functions have running time of O(n). Since each functions performed
+a search in the <code>free_list</code>. Please, tell me if I am wrong. I will study more about this topic and correct if I wrote
+bullshit. The following sources are the header and a test program.</p>
+<div class="gist">
+    <script src='https://gist.github.com/869420fb87353049d4d7.js?file=memory.h'></script>
+    <noscript>
+        <pre><code>#ifndef _MEMORY_HEADER
+#define  _MEMORY_HEADER
+
+/**
+ * Allocates a block of memory with bytes of length
+ * @returns a pointer to the allocated block of memory. Return NULL in error
+ */
+void* memory_alloc(size_t bytes);
+
+/**
+ * Deallocates the ptr block of memory
+ * @returns 0 on success
+ */
+void memory_free(void* ptr);
+
+#endif</code></pre>
+    </noscript>
+</div>
 <div class="gist">
     <script src='https://gist.github.com/869420fb87353049d4d7.js?file=sample.c'></script>
     <noscript>
@@ -288,7 +290,6 @@ int main(){
 }</code></pre>
     </noscript>
 </div>
-<p>The last source code is a simple sample program using the functions described before.</p>
 <p>Feel free to ask me in the comments. =]</p>
 <h4>References</h4>
 <p><a href="http://linux.die.net/man/2/sbrk">brk, sbrk</a></p>

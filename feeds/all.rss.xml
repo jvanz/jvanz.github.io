@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>vanz</title><link>/</link><description></description><atom:link href="/feeds/all.rss.xml" rel="self"></atom:link><lastBuildDate>Thu, 28 Jan 2016 00:00:00 -0200</lastBuildDate><item><title>Git: partial commit</title><link>/git-partial-commit.html</link><description>&lt;p&gt;This post will demonstrates one of many cool features available in Git, partial commit. This feature allows commit
-some hunk of a file leaving other ones for a future commit.&lt;/p&gt;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>vanz</title><link>/</link><description></description><atom:link href="/feeds/all.rss.xml" rel="self"></atom:link><lastBuildDate>Thu, 28 Jan 2016 00:00:00 -0200</lastBuildDate><item><title>Git: partial commit</title><link>/git-partial-commit.html</link><description>&lt;p&gt;This post will demonstrate one of many cool features available in Git, partial commit. This feature allows add just
+some hunk of a file leaving other ones for future commit.&lt;/p&gt;
 &lt;p&gt;Let's suppose in a project there is the following source code:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
 
@@ -88,7 +88,7 @@ index ce46da0..9eaf12b 100644
 
 
 &lt;p&gt;Nice, now it's time to commit the changes. However, it's necessary commit each hunk in different commits. Fortunately
-git has a feature that will help on this situation. The command &lt;code&gt;git add&lt;/code&gt; and &lt;code&gt;git commit&lt;/code&gt; allows user to select which
+git has a feature that will help on this situation. The commands &lt;code&gt;git add&lt;/code&gt; and &lt;code&gt;git commit&lt;/code&gt; allows user to select which
 hunks of a file should be added. This is done by passing the &lt;code&gt;-p, --patch&lt;/code&gt; option. In our example, let's use &lt;code&gt;git commit&lt;/code&gt;
 to choose the hunks should be added in first commit:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;git commit -p commit2.c
@@ -145,10 +145,10 @@ e - manually edit the current hunk
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;As the file is very small, all changes are shown as a unique hunk. So is necessary split it, selecting for the first
-commit just the changes related if &lt;code&gt;bar()&lt;/code&gt; function. For that, there are two options: &lt;code&gt;s&lt;/code&gt; and &lt;code&gt;e&lt;/code&gt;. In first one,
+&lt;p&gt;The file is very small, all changes are shown as a unique hunk. So it is necessary split it, selecting for the first
+commit just the changes related with &lt;code&gt;bar()&lt;/code&gt; function. For that, there are two options: &lt;code&gt;s&lt;/code&gt; and &lt;code&gt;e&lt;/code&gt;. In first one,
 git splits the current hunk into smaller ones. The second allows user manually choose which hunk it wants. In this
-sample we will use &lt;code&gt;s&lt;/code&gt; options. So after select the actions, git shows:&lt;/p&gt;
+sample we will use &lt;code&gt;s&lt;/code&gt; option. So after select the actions, git shows:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;Stage&lt;/span&gt; &lt;span class="n"&gt;this&lt;/span&gt; &lt;span class="n"&gt;hunk&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="n"&gt;q&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="n"&gt;d&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt; &lt;span class="n"&gt;s&lt;/span&gt;
 &lt;span class="n"&gt;Split&lt;/span&gt; &lt;span class="n"&gt;into&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt; &lt;span class="n"&gt;hunks&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;
 &lt;span class="err"&gt;@@&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt; &lt;span class="err"&gt;@@&lt;/span&gt;
@@ -227,8 +227,8 @@ commit. Thus, &lt;code&gt;y&lt;/code&gt; (stage this hunk) is the correct option
 
 
 &lt;p&gt;Again, the fifth hunk should be added. Choose &lt;code&gt;y&lt;/code&gt; option...
-When there are no more hunks to be analyzed git opens the editor to the user write a commit message. Once the message is
-written, it's done. See:&lt;/p&gt;
+When there are no more hunks to be analyzed, as we use the &lt;code&gt;git commit&lt;/code&gt; command,  the editor to write a commit message
+is opened. Once the message is written, it's done. See:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;$git&lt;/span&gt; &lt;span class="nx"&gt;log&lt;/span&gt;
 &lt;span class="nx"&gt;commit&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="nx"&gt;f1b1bc364a8e5ea83ab43ed95c0de026263561d&lt;/span&gt;
 &lt;span class="nx"&gt;Author&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;José&lt;/span&gt; &lt;span class="nx"&gt;Guilherme&lt;/span&gt; &lt;span class="nx"&gt;Vanz&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;guilherme&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;sft&lt;/span&gt;&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="nx"&gt;gmail&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;com&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;

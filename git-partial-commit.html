@@ -68,8 +68,8 @@
 <div class="post">
 	<h1 class="post-title">Git: partial commit</h1>
 	<span class="post-date">Thu 28 January 2016</span>
-	<p>This post will demonstrates one of many cool features available in Git, partial commit. This feature allows commit
-some hunk of a file leaving other ones for a future commit.</p>
+	<p>This post will demonstrate one of many cool features available in Git, partial commit. This feature allows add just
+some hunk of a file leaving other ones for future commit.</p>
 <p>Let's suppose in a project there is the following source code:</p>
 <div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 
@@ -157,7 +157,7 @@ index ce46da0..9eaf12b 100644
 
 
 <p>Nice, now it's time to commit the changes. However, it's necessary commit each hunk in different commits. Fortunately
-git has a feature that will help on this situation. The command <code>git add</code> and <code>git commit</code> allows user to select which
+git has a feature that will help on this situation. The commands <code>git add</code> and <code>git commit</code> allows user to select which
 hunks of a file should be added. This is done by passing the <code>-p, --patch</code> option. In our example, let's use <code>git commit</code>
 to choose the hunks should be added in first commit:</p>
 <div class="highlight"><pre><span class="nv">$ </span>git commit -p commit2.c
@@ -214,10 +214,10 @@ e - manually edit the current hunk
 </pre></div>
 
 
-<p>As the file is very small, all changes are shown as a unique hunk. So is necessary split it, selecting for the first
-commit just the changes related if <code>bar()</code> function. For that, there are two options: <code>s</code> and <code>e</code>. In first one,
+<p>The file is very small, all changes are shown as a unique hunk. So it is necessary split it, selecting for the first
+commit just the changes related with <code>bar()</code> function. For that, there are two options: <code>s</code> and <code>e</code>. In first one,
 git splits the current hunk into smaller ones. The second allows user manually choose which hunk it wants. In this
-sample we will use <code>s</code> options. So after select the actions, git shows:</p>
+sample we will use <code>s</code> option. So after select the actions, git shows:</p>
 <div class="highlight"><pre><span class="n">Stage</span> <span class="n">this</span> <span class="n">hunk</span> <span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="o">/</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">e</span><span class="p">,</span><span class="o">?</span><span class="p">]</span><span class="o">?</span> <span class="n">s</span>
 <span class="n">Split</span> <span class="n">into</span> <span class="mi">5</span> <span class="n">hunks</span><span class="p">.</span>
 <span class="err">@@</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">7</span> <span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">7</span> <span class="err">@@</span>
@@ -296,8 +296,8 @@ commit. Thus, <code>y</code> (stage this hunk) is the correct option this time.<
 
 
 <p>Again, the fifth hunk should be added. Choose <code>y</code> option...
-When there are no more hunks to be analyzed git opens the editor to the user write a commit message. Once the message is
-written, it's done. See:</p>
+When there are no more hunks to be analyzed, as we use the <code>git commit</code> command,  the editor to write a commit message
+is opened. Once the message is written, it's done. See:</p>
 <div class="highlight"><pre><span class="nx">$git</span> <span class="nx">log</span>
 <span class="nx">commit</span> <span class="mi">8</span><span class="nx">f1b1bc364a8e5ea83ab43ed95c0de026263561d</span>
 <span class="nx">Author</span><span class="o">:</span> <span class="nx">José</span> <span class="nx">Guilherme</span> <span class="nx">Vanz</span> <span class="o">&lt;</span><span class="nx">guilherme</span><span class="p">.</span><span class="nx">sft</span><span class="err">@</span><span class="nx">gmail</span><span class="p">.</span><span class="nx">com</span><span class="o">&gt;</span>

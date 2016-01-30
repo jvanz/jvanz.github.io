@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<link href="http://gmpg.org/xfn/11" rel="profile">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+		<!-- Enable responsiveness on mobile devices-->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+		<title>vanz</title>
+
+		<!-- CSS -->
+		<link href="//fonts.googleapis.com/" rel="dns-prefetch">
+		<link href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Abril+Fatface|PT+Sans:400,400italic,700&amp;subset=latin,latin-ext" rel="stylesheet">
+
+		<link rel="stylesheet" href="/theme/css/poole.css" />
+		<link rel="stylesheet" href="/theme/css/hyde.css" />
+		<link rel="stylesheet" href="/theme/css/syntax.css" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+
+		<!-- RSS -->
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+	</head>
+
+	<body class="theme-base-0d">
+<div class="sidebar">
+	<div class="container sidebar-sticky">
+		<div class="sidebar-about">
+
+			<h1>
+				<a href="/">
+					<img class="profile-picture" src="/images/avatar.jpg">
+					vanz
+				</a>
+			</h1>
+			<p class="lead"></p>
+			<p class="lead">I'm José Guilherme Vanz, from south Brazil. Working as Software Engineer. I love Open Source and programming </p>
+			<p></p>
+		</div>
+		<nav class="sidebar-nav">
+					<a class="sidebar-nav-item" href="mailto:guilherme.sft@gmail.com">
+						<i class="fa fa-envelope"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://twitter.com/vanzstuff">
+						<i class="fa fa-twitter"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://br.linkedin.com/in/jvanz">
+						<i class="fa fa-linkedin"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://github.com/jvanz">
+						<i class="fa fa-github"></i>
+					</a>
+			<a class="sidebar-nav-item" href="None">
+				<i class="fa fa-feed"></i>
+			</a>
+		</nav>
+	</div>
+</div>		<div class="content container">
+<div class="post">
+	<h1 class="post-title">Git: partial commit</h1>
+	<span class="post-date">Thu 28 January 2016</span>
+	<p>This post will demonstrates one of many cool features available in Git, partial commit. This feature allows commit
+some hunk of a file leaving other ones for a future commit.</p>
+<p>Let's suppose in a project there is the following source code:</p>
+<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+
+<span class="kt">void</span> <span class="nf">foo</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">bar</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">foo</span><span class="p">();</span>
+    <span class="n">bar</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello, it&#39;s foo function here</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">bar</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello, it&#39;s bar function here. Wow! You send me a %d... it&#39;s such a number! ;)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>In this brand new repository there is only one commit:</p>
+<div class="highlight"><pre><span class="nv">$ </span>git log
+commit aba1cbab0b427a9e6713f2fe563e2b14db6e51cd
+Author: José Guilherme Vanz &lt;guilherme.sft@gmail.com&gt;
+Date:   Tue Jan <span class="m">26</span> 20:45:42 <span class="m">2016</span> -0200
+
+    Add commit.c
+</pre></div>
+
+
+<p>And the first change is made:</p>
+<div class="highlight"><pre><span class="nv">$ </span>git diff
+diff --git a/commit.c b/commit.c
+index ce46da0..9eaf12b 100644
+--- a/commit.c
++++ b/commit.c
+@@ -16,5 +16,7 @@ void foo<span class="o">()</span>
+
+ void bar<span class="o">(</span>int x<span class="o">)</span>
+ <span class="o">{</span>
++       <span class="nb">printf</span><span class="o">(</span><span class="s2">&quot;--------------------------------------------------&quot;</span><span class="o">)</span><span class="p">;</span>
+        <span class="nb">printf</span><span class="o">(</span><span class="s2">&quot;Hello, it&#39;s bar function here. Wow! You send me a %d... it&#39;s such a number! ;)\n&quot;</span>, x<span class="o">)</span><span class="p">;</span>
++       <span class="nb">printf</span><span class="o">(</span><span class="s2">&quot;--------------------------------------------------&quot;</span><span class="o">)</span><span class="p">;</span>
+ <span class="o">}</span>
+</pre></div>
+
+
+<p>Suppose a colleague requests another update in same file. He/She asks to change the name of the <code>foo()</code> function to
+<code>xpto()</code>. So after both changes the diff is:</p>
+<div class="highlight"><pre><span class="gh">diff --git a/commit.c b/commit.c</span>
+<span class="gh">index ce46da0..8255080 100644</span>
+<span class="gd">--- a/commit.c</span>
+<span class="gi">+++ b/commit.c</span>
+<span class="gu">@@ -1,20 +1,22 @@</span>
+ #include &lt;stdio.h&gt;
+
+<span class="gd">-void foo(void);</span>
+<span class="gi">+void xpto(void);</span>
+ void bar(int);
+
+ int main(int argc, char **argv)
+ {
+<span class="gd">-       foo();</span>
+<span class="gi">+       xpto();</span>
+        bar(100);
+ }
+
+<span class="gd">-void foo()</span>
+<span class="gi">+void xpto()</span>
+ {
+        printf(&quot;Hello, it&#39;s foo function here\n&quot;);
+ }
+
+ void bar(int x)
+ {
+<span class="gi">+       printf(&quot;--------------------------------------------------&quot;);</span>
+        printf(&quot;Hello, it&#39;s bar function here. Wow! You send me a %d... it&#39;s such a number! ;)\n&quot;, x);
+<span class="gi">+       printf(&quot;--------------------------------------------------&quot;);</span>
+ }
+</pre></div>
+
+
+<p>Nice, now it's time to commit the changes. However, it's necessary commit each hunk in different commits. Fortunately
+git has a feature that will help on this situation. The command <code>git add</code> and <code>git commit</code> allows user to select which
+hunks of a file should be added. This is done by passing the <code>-p, --patch</code> option. In our example, let's use <code>git commit</code>
+to choose the hunks should be added in first commit:</p>
+<div class="highlight"><pre><span class="nv">$ </span>git commit -p commit2.c
+diff --git a/commit.c b/commit.c
+index ce46da0..8255080 100644
+--- a/commit.c
++++ b/commit.c
+@@ -1,20 +1,22 @@
+ <span class="c">#include &lt;stdio.h&gt;</span>
+
+-void foo<span class="o">(</span>void<span class="o">)</span><span class="p">;</span>
++void xpto<span class="o">(</span>void<span class="o">)</span><span class="p">;</span>
+ void bar<span class="o">(</span>int<span class="o">)</span><span class="p">;</span>
+
+ int main<span class="o">(</span>int argc, char **argv<span class="o">)</span>
+ <span class="o">{</span>
+-       foo<span class="o">()</span><span class="p">;</span>
++       xpto<span class="o">()</span><span class="p">;</span>
+        bar<span class="o">(</span>100<span class="o">)</span><span class="p">;</span>
+ <span class="o">}</span>
+
+-void foo<span class="o">()</span>
++void xpto<span class="o">()</span>
+ <span class="o">{</span>
+        <span class="nb">printf</span><span class="o">(</span><span class="s2">&quot;Hello, it&#39;s foo function here\n&quot;</span><span class="o">)</span><span class="p">;</span>
+ <span class="o">}</span>
+
+ void bar<span class="o">(</span>int x<span class="o">)</span>
+ <span class="o">{</span>
++       <span class="nb">printf</span><span class="o">(</span><span class="s2">&quot;--------------------------------------------------&quot;</span><span class="o">)</span><span class="p">;</span>
+        <span class="nb">printf</span><span class="o">(</span><span class="s2">&quot;Hello, it&#39;s bar function here. Wow! You send me a %d... it&#39;s such a number! ;)\n&quot;</span>, x<span class="o">)</span><span class="p">;</span>
++       <span class="nb">printf</span><span class="o">(</span><span class="s2">&quot;--------------------------------------------------&quot;</span><span class="o">)</span><span class="p">;</span>
+ <span class="o">}</span>
+Stage this hunk <span class="o">[</span>y,n,q,a,d,/,s,e,?<span class="o">]</span>?
+</pre></div>
+
+
+<p>As can be seen, git shows each hunk and asks the user for what should be done with it. The options are: [y,n,q,a,d,/,s,e,?].
+To see help text, type <code>?</code>. The following text shall be shown:</p>
+<div class="highlight"><pre>y - stage this hunk
+n - do not stage this hunk
+q - quit; do not stage this hunk or any of the remaining ones
+a - stage this hunk and all later hunks in the file
+d - do not stage this hunk or any of the later hunks in the file
+g - select a hunk to go to
+/ - search for a hunk matching the given regex
+j - leave this hunk undecided, see next undecided hunk
+J - leave this hunk undecided, see next hunk
+k - leave this hunk undecided, see previous undecided hunk
+K - leave this hunk undecided, see previous hunk
+s - split the current hunk into smaller hunks
+e - manually edit the current hunk
+? - print help
+</pre></div>
+
+
+<p>As the file is very small, all changes are shown as a unique hunk. So is necessary split it, selecting for the first
+commit just the changes related if <code>bar()</code> function. For that, there are two options: <code>s</code> and <code>e</code>. In first one,
+git splits the current hunk into smaller ones. The second allows user manually choose which hunk it wants. In this
+sample we will use <code>s</code> options. So after select the actions, git shows:</p>
+<div class="highlight"><pre><span class="n">Stage</span> <span class="n">this</span> <span class="n">hunk</span> <span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="o">/</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">e</span><span class="p">,</span><span class="o">?</span><span class="p">]</span><span class="o">?</span> <span class="n">s</span>
+<span class="n">Split</span> <span class="n">into</span> <span class="mi">5</span> <span class="n">hunks</span><span class="p">.</span>
+<span class="err">@@</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">7</span> <span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">7</span> <span class="err">@@</span>
+ <span class="cp">#include &lt;stdio.h&gt;</span>
+
+<span class="o">-</span><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+<span class="o">+</span><span class="kt">void</span> <span class="n">xpto</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+ <span class="kt">void</span> <span class="nf">bar</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+
+ <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+ <span class="p">{</span>
+<span class="n">Stage</span> <span class="n">this</span> <span class="n">hunk</span> <span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="o">/</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">J</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">e</span><span class="p">,</span><span class="o">?</span><span class="p">]</span><span class="o">?</span>
+</pre></div>
+
+
+<p>The previous hunk has been split into 5 hunks. Git now will iterate all of them asking the user what should be done
+with each one. The first hunk should be ignored, as it is not related with function <code>bar()</code>. Hence, the <code>n</code> option
+(do not stage) is the right one.</p>
+<div class="highlight"><pre>Stage this hunk [y,n,q,a,d,/,j,J,g,e,?]? n
+@@ -4,8 +4,8 @@
+ void bar(int);
+
+ int main(int argc, char **argv)
+ {
+-       foo();
++       xpto();
+        bar(100);
+ }
+
+Stage this hunk [y,n,q,a,d,/,K,j,J,g,e,?]?
+</pre></div>
+
+
+<p>Second hunk should not be added either:</p>
+<div class="highlight"><pre><span class="nx">Stage</span> <span class="k">this</span> <span class="nx">hunk</span> <span class="cp">[</span><span class="nx">y</span><span class="p">,</span><span class="nx">n</span><span class="p">,</span><span class="nx">q</span><span class="p">,</span><span class="nx">a</span><span class="p">,</span><span class="nx">d</span><span class="p">,</span><span class="o">/</span><span class="p">,</span><span class="nx">K</span><span class="p">,</span><span class="nx">j</span><span class="p">,</span><span class="nx">J</span><span class="p">,</span><span class="nx">g</span><span class="p">,</span><span class="nx">e</span><span class="p">,</span><span class="o">?</span><span class="cp">]</span><span class="o">?</span> <span class="nx">n</span>
+<span class="err">@@</span> <span class="o">-</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span> <span class="o">+</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span> <span class="err">@@</span>
+        <span class="nx">bar</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+ <span class="p">}</span>
+
+<span class="o">-</span><span class="k">void</span> <span class="nx">foo</span><span class="p">()</span>
+<span class="o">+</span><span class="k">void</span> <span class="nx">xpto</span><span class="p">()</span>
+ <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Hello, it&#39;s foo function here\n&quot;</span><span class="p">);</span>
+ <span class="p">}</span>
+
+ <span class="k">void</span> <span class="nx">bar</span><span class="p">(</span><span class="kr">int</span> <span class="nx">x</span><span class="p">)</span>
+ <span class="p">{</span>
+<span class="nx">Stage</span> <span class="k">this</span> <span class="nx">hunk</span> <span class="cp">[</span><span class="nx">y</span><span class="p">,</span><span class="nx">n</span><span class="p">,</span><span class="nx">q</span><span class="p">,</span><span class="nx">a</span><span class="p">,</span><span class="nx">d</span><span class="p">,</span><span class="o">/</span><span class="p">,</span><span class="nx">K</span><span class="p">,</span><span class="nx">j</span><span class="p">,</span><span class="nx">J</span><span class="p">,</span><span class="nx">g</span><span class="p">,</span><span class="nx">e</span><span class="p">,</span><span class="o">?</span><span class="cp">]</span><span class="o">?</span>
+</pre></div>
+
+
+<p>The same with third one...</p>
+<div class="highlight"><pre><span class="nx">Stage</span> <span class="k">this</span> <span class="nx">hunk</span> <span class="cp">[</span><span class="nx">y</span><span class="p">,</span><span class="nx">n</span><span class="p">,</span><span class="nx">q</span><span class="p">,</span><span class="nx">a</span><span class="p">,</span><span class="nx">d</span><span class="p">,</span><span class="o">/</span><span class="p">,</span><span class="nx">K</span><span class="p">,</span><span class="nx">j</span><span class="p">,</span><span class="nx">J</span><span class="p">,</span><span class="nx">g</span><span class="p">,</span><span class="nx">e</span><span class="p">,</span><span class="o">?</span><span class="cp">]</span><span class="o">?</span> <span class="nx">n</span>
+<span class="err">@@</span> <span class="o">-</span><span class="mi">13</span><span class="p">,</span><span class="mi">7</span> <span class="o">+</span><span class="mi">13</span><span class="p">,</span><span class="mi">8</span> <span class="err">@@</span>
+ <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Hello, it&#39;s foo function here\n&quot;</span><span class="p">);</span>
+ <span class="p">}</span>
+
+ <span class="k">void</span> <span class="nx">bar</span><span class="p">(</span><span class="kr">int</span> <span class="nx">x</span><span class="p">)</span>
+ <span class="p">{</span>
+<span class="o">+</span>       <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;--------------------------------------------------&quot;</span><span class="p">);</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Hello, it&#39;s bar function here. Wow! You send me a %d... it&#39;s such a number! ;)\n&quot;</span><span class="p">,</span> <span class="nx">x</span><span class="p">);</span>
+<span class="nx">Stage</span> <span class="k">this</span> <span class="nx">hunk</span> <span class="cp">[</span><span class="nx">y</span><span class="p">,</span><span class="nx">n</span><span class="p">,</span><span class="nx">q</span><span class="p">,</span><span class="nx">a</span><span class="p">,</span><span class="nx">d</span><span class="p">,</span><span class="o">/</span><span class="p">,</span><span class="nx">K</span><span class="p">,</span><span class="nx">j</span><span class="p">,</span><span class="nx">J</span><span class="p">,</span><span class="nx">g</span><span class="p">,</span><span class="nx">e</span><span class="p">,</span><span class="o">?</span><span class="cp">]</span><span class="o">?</span>
+</pre></div>
+
+
+<p>In the fourth hunk we have the first change related with <code>bar()</code> function. As could be seen, this hunk must be in the
+commit. Thus, <code>y</code> (stage this hunk) is the correct option this time.</p>
+<div class="highlight"><pre><span class="nx">Stage</span> <span class="k">this</span> <span class="nx">hunk</span> <span class="cp">[</span><span class="nx">y</span><span class="p">,</span><span class="nx">n</span><span class="p">,</span><span class="nx">q</span><span class="p">,</span><span class="nx">a</span><span class="p">,</span><span class="nx">d</span><span class="p">,</span><span class="o">/</span><span class="p">,</span><span class="nx">K</span><span class="p">,</span><span class="nx">j</span><span class="p">,</span><span class="nx">J</span><span class="p">,</span><span class="nx">g</span><span class="p">,</span><span class="nx">e</span><span class="p">,</span><span class="o">?</span><span class="cp">]</span><span class="o">?</span> <span class="nx">y</span>
+<span class="err">@@</span> <span class="o">-</span><span class="mi">19</span><span class="p">,</span><span class="mi">2</span> <span class="o">+</span><span class="mi">20</span><span class="p">,</span><span class="mi">3</span> <span class="err">@@</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Hello, it&#39;s bar function here. Wow! You send me a %d... it&#39;s such a number! ;)\n&quot;</span><span class="p">,</span> <span class="nx">x</span><span class="p">);</span>
+<span class="o">+</span>       <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;--------------------------------------------------&quot;</span><span class="p">);</span>
+ <span class="p">}</span>
+<span class="nx">Stage</span> <span class="k">this</span> <span class="nx">hunk</span> <span class="cp">[</span><span class="nx">y</span><span class="p">,</span><span class="nx">n</span><span class="p">,</span><span class="nx">q</span><span class="p">,</span><span class="nx">a</span><span class="p">,</span><span class="nx">d</span><span class="p">,</span><span class="o">/</span><span class="p">,</span><span class="nx">K</span><span class="p">,</span><span class="nx">g</span><span class="p">,</span><span class="nx">e</span><span class="p">,</span><span class="o">?</span><span class="cp">]</span><span class="o">?</span>
+</pre></div>
+
+
+<p>Again, the fifth hunk should be added. Choose <code>y</code> option...
+When there are no more hunks to be analyzed git opens the editor to the user write a commit message. Once the message is
+written, it's done. See:</p>
+<div class="highlight"><pre><span class="nx">$git</span> <span class="nx">log</span>
+<span class="nx">commit</span> <span class="mi">8</span><span class="nx">f1b1bc364a8e5ea83ab43ed95c0de026263561d</span>
+<span class="nx">Author</span><span class="o">:</span> <span class="nx">José</span> <span class="nx">Guilherme</span> <span class="nx">Vanz</span> <span class="o">&lt;</span><span class="nx">guilherme</span><span class="p">.</span><span class="nx">sft</span><span class="err">@</span><span class="nx">gmail</span><span class="p">.</span><span class="nx">com</span><span class="o">&gt;</span>
+<span class="nb">Date</span><span class="o">:</span>   <span class="nx">Tue</span> <span class="nx">Jan</span> <span class="mi">26</span> <span class="mi">22</span><span class="o">:</span><span class="mi">43</span><span class="o">:</span><span class="mi">05</span> <span class="mi">2016</span> <span class="o">-</span><span class="mi">0200</span>
+
+    <span class="nx">Changes</span> <span class="k">in</span> <span class="nx">bar</span><span class="p">()</span> <span class="kd">function</span>
+
+<span class="nx">commit</span> <span class="nx">aba1cbab0b427a9e6713f2fe563e2b14db6e51cd</span>
+<span class="nx">Author</span><span class="o">:</span> <span class="nx">José</span> <span class="nx">Guilherme</span> <span class="nx">Vanz</span> <span class="o">&lt;</span><span class="nx">guilherme</span><span class="p">.</span><span class="nx">sft</span><span class="err">@</span><span class="nx">gmail</span><span class="p">.</span><span class="nx">com</span><span class="o">&gt;</span>
+<span class="nb">Date</span><span class="o">:</span>   <span class="nx">Tue</span> <span class="nx">Jan</span> <span class="mi">26</span> <span class="mi">20</span><span class="o">:</span><span class="mi">45</span><span class="o">:</span><span class="mi">42</span> <span class="mi">2016</span> <span class="o">-</span><span class="mi">0200</span>
+
+    <span class="nx">Add</span> <span class="nx">commit</span><span class="p">.</span><span class="nx">c</span>
+
+<span class="nx">$</span> <span class="nx">git</span> <span class="nx">diff</span>
+<span class="nx">diff</span> <span class="o">--</span><span class="nx">git</span> <span class="nx">a</span><span class="o">/</span><span class="nx">commit</span><span class="p">.</span><span class="nx">c</span> <span class="nx">b</span><span class="o">/</span><span class="nx">commit</span><span class="p">.</span><span class="nx">c</span>
+<span class="nx">index</span> <span class="mi">9</span><span class="nx">eaf12b</span><span class="p">..</span><span class="mi">8255080</span> <span class="mi">100644</span>
+<span class="o">---</span> <span class="nx">a</span><span class="o">/</span><span class="nx">commit</span><span class="p">.</span><span class="nx">c</span>
+<span class="o">+++</span> <span class="nx">b</span><span class="o">/</span><span class="nx">commit</span><span class="p">.</span><span class="nx">c</span>
+<span class="err">@@</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">15</span> <span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">15</span> <span class="err">@@</span>
+ <span class="err">#</span><span class="nx">include</span> <span class="o">&lt;</span><span class="nx">stdio</span><span class="p">.</span><span class="nx">h</span><span class="o">&gt;</span>
+
+<span class="o">-</span><span class="k">void</span> <span class="nx">foo</span><span class="p">(</span><span class="k">void</span><span class="p">);</span>
+<span class="o">+</span><span class="k">void</span> <span class="nx">xpto</span><span class="p">(</span><span class="k">void</span><span class="p">);</span>
+ <span class="k">void</span> <span class="nx">bar</span><span class="p">(</span><span class="kr">int</span><span class="p">);</span>
+
+ <span class="kr">int</span> <span class="nx">main</span><span class="p">(</span><span class="kr">int</span> <span class="nx">argc</span><span class="p">,</span> <span class="kr">char</span> <span class="o">**</span><span class="nx">argv</span><span class="p">)</span>
+ <span class="p">{</span>
+<span class="o">-</span>       <span class="nx">foo</span><span class="p">();</span>
+<span class="o">+</span>       <span class="nx">xpto</span><span class="p">();</span>
+        <span class="nx">bar</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+ <span class="p">}</span>
+
+<span class="o">-</span><span class="k">void</span> <span class="nx">foo</span><span class="p">()</span>
+<span class="o">+</span><span class="k">void</span> <span class="nx">xpto</span><span class="p">()</span>
+ <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Hello, it&#39;s foo function here\n&quot;</span><span class="p">);</span>
+ <span class="p">}</span>
+</pre></div>
+
+
+<p>Hence, the first commit contains just the changes made with <code>bar()</code> function. The remaining changes can be committed in
+second commit:</p>
+<div class="highlight"><pre><span class="err">$</span><span class="n">git</span> <span class="n">commit</span> <span class="o">-</span><span class="n">a</span> <span class="o">-</span><span class="n">m</span> <span class="s">&quot;Rename foo() function to xpto()&quot;</span>
+<span class="p">[</span><span class="n">master</span> <span class="n">c12c40a</span><span class="p">]</span> <span class="n">Rename</span> <span class="n">foo</span><span class="p">()</span> <span class="n">function</span> <span class="n">to</span> <span class="n">xpto</span><span class="p">()</span>
+ <span class="mi">1</span> <span class="n">file</span> <span class="n">changed</span><span class="p">,</span> <span class="mi">3</span> <span class="n">insertions</span><span class="p">(</span><span class="o">+</span><span class="p">),</span> <span class="mi">3</span> <span class="n">deletions</span><span class="p">(</span><span class="o">-</span><span class="p">)</span>
+
+<span class="err">$</span><span class="n">git</span> <span class="n">log</span>
+<span class="n">commit</span> <span class="n">c12c40a83fe5295bc84ca0928182881426d9d752</span>
+<span class="nl">Author</span><span class="p">:</span> <span class="n">Jos</span><span class="err">é</span> <span class="n">Guilherme</span> <span class="n">Vanz</span> <span class="o">&lt;</span><span class="n">guilherme</span><span class="p">.</span><span class="n">sft</span><span class="p">@</span><span class="n">gmail</span><span class="p">.</span><span class="n">com</span><span class="o">&gt;</span>
+<span class="nl">Date</span><span class="p">:</span>   <span class="n">Tue</span> <span class="n">Jan</span> <span class="mi">26</span> <span class="mi">22</span><span class="o">:</span><span class="mi">48</span><span class="o">:</span><span class="mi">50</span> <span class="mi">2016</span> <span class="o">-</span><span class="mo">0200</span>
+
+    <span class="n">Rename</span> <span class="n">foo</span><span class="p">()</span> <span class="n">function</span> <span class="n">to</span> <span class="n">xpto</span><span class="p">()</span>
+
+<span class="n">commit</span> <span class="mf">8f</span><span class="mi">1</span><span class="n">b1bc364a8e5ea83ab43ed95c0de026263561d</span>
+<span class="nl">Author</span><span class="p">:</span> <span class="n">Jos</span><span class="err">é</span> <span class="n">Guilherme</span> <span class="n">Vanz</span> <span class="o">&lt;</span><span class="n">guilherme</span><span class="p">.</span><span class="n">sft</span><span class="p">@</span><span class="n">gmail</span><span class="p">.</span><span class="n">com</span><span class="o">&gt;</span>
+<span class="nl">Date</span><span class="p">:</span>   <span class="n">Tue</span> <span class="n">Jan</span> <span class="mi">26</span> <span class="mi">22</span><span class="o">:</span><span class="mi">43</span><span class="o">:</span><span class="mo">05</span> <span class="mi">2016</span> <span class="o">-</span><span class="mo">0200</span>
+
+    <span class="n">Changes</span> <span class="k">in</span> <span class="n">bar</span><span class="p">()</span> <span class="n">function</span>
+
+<span class="n">commit</span> <span class="n">aba1cbab0b427a9e6713f2fe563e2b14db6e51cd</span>
+<span class="nl">Author</span><span class="p">:</span> <span class="n">Jos</span><span class="err">é</span> <span class="n">Guilherme</span> <span class="n">Vanz</span> <span class="o">&lt;</span><span class="n">guilherme</span><span class="p">.</span><span class="n">sft</span><span class="p">@</span><span class="n">gmail</span><span class="p">.</span><span class="n">com</span><span class="o">&gt;</span>
+<span class="nl">Date</span><span class="p">:</span>   <span class="n">Tue</span> <span class="n">Jan</span> <span class="mi">26</span> <span class="mi">20</span><span class="o">:</span><span class="mi">45</span><span class="o">:</span><span class="mi">42</span> <span class="mi">2016</span> <span class="o">-</span><span class="mo">0200</span>
+
+    <span class="n">Add</span> <span class="n">commit</span><span class="p">.</span><span class="n">c</span>
+</pre></div>
+
+
+<p>I hope you have enjoyed the tip. ;)</p>
+	<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_shortname = 'jvanz';
+			(function() {
+	 			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	 			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	 			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	 		})();
+		</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</div>
+		</div>
+	</body>
+</html>

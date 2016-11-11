@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2016-01-28T00:00:00-02:00</updated><entry><title>Git: partial commit</title><link href="/git-partial-commit.html" rel="alternate"></link><published>2016-01-28T00:00:00-02:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2016-01-28:git-partial-commit.html</id><summary type="html">&lt;p&gt;This post will demonstrate one of many cool features available in Git, partial commit. This feature allows add just
+<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2016-01-28T00:00:00-02:00</updated><entry><title>Git: partial commit</title><link href="/git-partial-commit.html" rel="alternate"></link><published>2016-01-28T00:00:00-02:00</published><updated>2016-01-28T00:00:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2016-01-28:git-partial-commit.html</id><summary type="html">&lt;p&gt;This post will demonstrate one of many cool features available in Git, partial commit. This feature allows add just
 some hunk of a file leaving other ones for future commit.&lt;/p&gt;
 &lt;p&gt;Let's suppose in a project there is the following source code:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
 
 &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
 &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
@@ -39,7 +39,7 @@ to choose the hunks should be added in first commit:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="/images/partial_commit_4.png" /&gt;&lt;/p&gt;
 &lt;p&gt;As can be seen, git shows each hunk and asks the user for what should be done with it. The options are: [y,n,q,a,d,/,s,e,?].
 To see help text, type &lt;code&gt;?&lt;/code&gt;. The following text shall be shown:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;y - stage this hunk
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;y - stage this hunk
 n - do not stage this hunk
 q - quit; do not stage this hunk or any of the remaining ones
 a - stage this hunk and all later hunks in the file
@@ -79,7 +79,7 @@ will be open to the user insert the commit message. That's it.&lt;/p&gt;
 &lt;p&gt;Now with the first commit contains the only the changes within &lt;code&gt;bar()&lt;/code&gt; function,
 further hunks might be committed in the second commit:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="/images/partial_commit_10.png" /&gt;&lt;/p&gt;
-&lt;p&gt;I hope you have enjoyed the tip. ;)&lt;/p&gt;</summary><category term="git"></category></entry><entry><title>malloc/free implementation. Just4Fun!</title><link href="/mallocfree-implementation-just4fun.html" rel="alternate"></link><published>2016-01-24T22:22:00-02:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2015-11-26:mallocfree-implementation-just4fun.html</id><summary type="html">&lt;p&gt;Some time ago I bought the The Linux Programming Interface book, one of the best books I have acquired.
+&lt;p&gt;I hope you have enjoyed the tip. ;)&lt;/p&gt;</summary><category term="git"></category></entry><entry><title>malloc/free implementation. Just4Fun!</title><link href="/mallocfree-implementation-just4fun.html" rel="alternate"></link><published>2016-01-24T22:22:00-02:00</published><updated>2016-01-24T22:22:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2015-11-26:mallocfree-implementation-just4fun.html</id><summary type="html">&lt;p&gt;Some time ago I bought the The Linux Programming Interface book, one of the best books I have acquired.
 One of the first chapters I read were about memory allocation. At the end of the chapter, author offers some exercises
 to the reader. Among them there is a challenging one. He suggests to implement the equivalent to the malloc and free
 functions. The challenge has been accepted!&lt;/p&gt;
@@ -314,14 +314,14 @@ int main(){
 &lt;p&gt;&lt;a href="http://linux.die.net/man/2/sbrk"&gt;brk, sbrk&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://www.amazon.com/Linux-Programming-Interface-System-Handbook/dp/1593272200/ref=sr_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1448501399&amp;amp;sr=1-1&amp;amp;keywords=the+linux+programming+interface"&gt;The Linux Programing Interface&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://www.amazon.com/Programming-Language-Brian-W-Kernighan/dp/0131103628/ref=sr_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1448501445&amp;amp;sr=1-1&amp;amp;keywords=the+c+programming+language"&gt;The C Programming Language&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href="https://github.com/jvanz/tlpi"&gt;Repository&lt;/a&gt;&lt;/p&gt;</summary><category term="c"></category><category term="tlpi"></category><category term="glibc"></category><category term="memory"></category></entry><entry><title>cgo: Go lang with C</title><link href="/cgo-go-lang-with-c.html" rel="alternate"></link><published>2015-09-22T00:00:00-03:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2015-09-22:cgo-go-lang-with-c.html</id><summary type="html">&lt;p&gt;Some weeks ago I had to customize the &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt; to integrate it with some libraries written and C.
+&lt;p&gt;&lt;a href="https://github.com/jvanz/tlpi"&gt;Repository&lt;/a&gt;&lt;/p&gt;</summary><category term="c"></category><category term="tlpi"></category><category term="glibc"></category><category term="memory"></category></entry><entry><title>cgo: Go lang with C</title><link href="/cgo-go-lang-with-c.html" rel="alternate"></link><published>2015-09-22T00:00:00-03:00</published><updated>2015-09-22T00:00:00-03:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2015-09-22:cgo-go-lang-with-c.html</id><summary type="html">&lt;p&gt;Some weeks ago I had to customize the &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt; to integrate it with some libraries written and C.
 Maybe you already know Docker is written in Go language and to do this task was used &lt;a href="https://golang.org/cmd/cgo/"&gt;cgo&lt;/a&gt;
 Cgo enables integrate Go code with C. It shows itself easier and smooth comparing with my past experiences with JNI&lt;/p&gt;
 &lt;h2&gt;Hello World!&lt;/h2&gt;
 &lt;p&gt;To start let's code the old but gold hello world program. In the first example the program will just print a string that is returned by a C function.
 As you can see in the following snippet, cgo allows to put C code inside the Go source code. The only thing has to do is import the pseudo-package &lt;code&gt;C&lt;/code&gt;.
 The comments before this import is a C code that will be compiled as a header.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
 
 &lt;span class="c1"&gt;//char* get_msg(){&lt;/span&gt;
 &lt;span class="c1"&gt;//      return &amp;quot;Hello Go!&amp;quot;;&lt;/span&gt;
@@ -338,7 +338,7 @@ The comments before this import is a C code that will be compiled as a header.&l
 
 &lt;h2&gt;More funny program&lt;/h2&gt;
 &lt;p&gt;To make the things more funny, the next program will write the command line arguments to a file. Take a look the code:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cm"&gt;/*&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cm"&gt;/*&lt;/span&gt;
 &lt;span class="cm"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
 
 &lt;span class="cm"&gt;FILE *file;&lt;/span&gt;
@@ -399,7 +399,7 @@ doing in the lines &lt;code&gt;C.free(unsafe.Pointer(cs))&lt;/code&gt;. Otherwis
 &lt;p&gt;Furthermore, when some Go source file contains the special import "C" the Go tool looks for .c, .cpp, .cc and others files types in the same source code file directory. Then it compiles them with the default C/C++ compiler.
 So you might do this:&lt;/p&gt;
 &lt;p&gt;writer.go:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
 
 &lt;span class="cm"&gt;/*&lt;/span&gt;
 &lt;span class="cm"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
@@ -422,7 +422,7 @@ So you might do this:&lt;/p&gt;
 
 
 &lt;p&gt;writer.c:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
 
 &lt;span class="kt"&gt;FILE&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
@@ -457,7 +457,7 @@ So you might do this:&lt;/p&gt;
 &lt;p&gt;This post is very, very, very simple. If you would like know more see the references below.&lt;/p&gt;
 &lt;h5&gt;References&lt;/h5&gt;
 &lt;p&gt;&lt;a href="https://golang.org/cmd/cgo/"&gt;cgo&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href="http://blog.golang.org/c-go-cgo"&gt;C? Go? Cgo!&lt;/a&gt;&lt;/p&gt;</summary><category term="golang"></category><category term="cgo"></category><category term="c"></category></entry><entry><title>Recovering missed data from stash</title><link href="/recovering-missed-data-from-stash.html" rel="alternate"></link><published>2014-02-15T00:00:00-02:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2014-02-15:recovering-missed-data-from-stash.html</id><summary type="html">&lt;p&gt;Today my colleague almost lost everything that he did during 4 days! Because  a wrong git command he dropped his changes saved on stash.
+&lt;p&gt;&lt;a href="http://blog.golang.org/c-go-cgo"&gt;C? Go? Cgo!&lt;/a&gt;&lt;/p&gt;</summary><category term="golang"></category><category term="cgo"></category><category term="c"></category></entry><entry><title>Recovering missed data from stash</title><link href="/recovering-missed-data-from-stash.html" rel="alternate"></link><published>2014-02-15T00:00:00-02:00</published><updated>2014-02-15T00:00:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2014-02-15:recovering-missed-data-from-stash.html</id><summary type="html">&lt;p&gt;Today my colleague almost lost everything that he did during 4 days! Because  a wrong git command he dropped his changes saved on stash.
 After this sad episode we looked for a way to try to recover as least part of his work... and we did it!&lt;/p&gt;
 &lt;p&gt;First of all, when you are implementing some big feature, split it in small pieces and commit it regularly. It's not a good idea stay so long time without commit your changes,  so take care.&lt;/p&gt;
 &lt;p&gt;Let's simulate a scenario to show what you can do when you lost some changes dropped from stash.
@@ -493,7 +493,7 @@ After I dropped the changes on my stash I executed the same command, and the out
 An possible solution is checkout the ID into a new branch or apply the commit directly. Once you have the ID of the object with your changes is up to you decide what is the best way to put changes on the master branch again.
 For this example I will use the &lt;code&gt;git-stash&lt;/code&gt; to apply the commit on my master branch again.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;git stash apply 95ccbd927ad4cd413ee2a28014c81454f4ede82c&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;A important thing to remember, git run its garbage collector periodically. After the gc execution you cannot see more the unreachable objects using &lt;code&gt;git-fsck&lt;/code&gt;. ;)&lt;/p&gt;</summary><category term="git"></category></entry><entry><title>From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg</title><link href="/from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html" rel="alternate"></link><published>2014-01-24T00:00:00-02:00</published><author><name>José Guilherme Vanz</name></author><id>tag:,2014-01-24:from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html</id><summary type="html">&lt;p&gt;While I have not decided what it will be my first post about development stuff I'll post the text that me and my friend wrote to the The Document Foundation's blog. In that text we talked about out trip to LibreOffice hackfest in freiburg.
+&lt;p&gt;A important thing to remember, git run its garbage collector periodically. After the gc execution you cannot see more the unreachable objects using &lt;code&gt;git-fsck&lt;/code&gt;. ;)&lt;/p&gt;</summary><category term="git"></category></entry><entry><title>From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg</title><link href="/from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html" rel="alternate"></link><published>2014-01-24T00:00:00-02:00</published><updated>2014-01-24T00:00:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2014-01-24:from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html</id><summary type="html">&lt;p&gt;While I have not decided what it will be my first post about development stuff I'll post the text that me and my friend wrote to the The Document Foundation's blog. In that text we talked about out trip to LibreOffice hackfest in freiburg.
 From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg&lt;/p&gt;
 &lt;p&gt;José Guilherme Vanz and Marcos Souza, LibreOffice development in Brazil&lt;/p&gt;
 &lt;p&gt;Our first contact with the LibreOffice was in FISL 2012 (International Forum of Free Software, held in Porto Alegre, Brazil). Since then, we got quickly involved with the LibreOffice development community. Now we attend events in Brazil advocating to people about the better office suite ever done!

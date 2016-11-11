@@ -63,7 +63,7 @@
 	<p>This post will demonstrate one of many cool features available in Git, partial commit. This feature allows add just
 some hunk of a file leaving other ones for future commit.</p>
 <p>Let's suppose in a project there is the following source code:</p>
-<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 
 <span class="kt">void</span> <span class="nf">foo</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
 <span class="kt">void</span> <span class="nf">bar</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
@@ -100,7 +100,7 @@ to choose the hunks should be added in first commit:</p>
 <p><img alt="" src="/images/partial_commit_4.png" /></p>
 <p>As can be seen, git shows each hunk and asks the user for what should be done with it. The options are: [y,n,q,a,d,/,s,e,?].
 To see help text, type <code>?</code>. The following text shall be shown:</p>
-<div class="highlight"><pre>y - stage this hunk
+<div class="highlight"><pre><span></span>y - stage this hunk
 n - do not stage this hunk
 q - quit; do not stage this hunk or any of the remaining ones
 a - stage this hunk and all later hunks in the file

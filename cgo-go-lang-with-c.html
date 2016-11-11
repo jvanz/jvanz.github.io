@@ -67,7 +67,7 @@ Cgo enables integrate Go code with C. It shows itself easier and smooth comparin
 <p>To start let's code the old but gold hello world program. In the first example the program will just print a string that is returned by a C function.
 As you can see in the following snippet, cgo allows to put C code inside the Go source code. The only thing has to do is import the pseudo-package <code>C</code>.
 The comments before this import is a C code that will be compiled as a header.</p>
-<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
+<div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nx">main</span>
 
 <span class="c1">//char* get_msg(){</span>
 <span class="c1">//      return &quot;Hello Go!&quot;;</span>
@@ -84,7 +84,7 @@ The comments before this import is a C code that will be compiled as a header.</
 
 <h2>More funny program</h2>
 <p>To make the things more funny, the next program will write the command line arguments to a file. Take a look the code:</p>
-<div class="highlight"><pre><span class="cm">/*</span>
+<div class="highlight"><pre><span></span><span class="cm">/*</span>
 <span class="cm">#include &lt;stdio.h&gt;</span>
 
 <span class="cm">FILE *file;</span>
@@ -145,7 +145,7 @@ doing in the lines <code>C.free(unsafe.Pointer(cs))</code>. Otherwise, you will 
 <p>Furthermore, when some Go source file contains the special import "C" the Go tool looks for .c, .cpp, .cc and others files types in the same source code file directory. Then it compiles them with the default C/C++ compiler.
 So you might do this:</p>
 <p>writer.go:</p>
-<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
+<div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nx">main</span>
 
 <span class="cm">/*</span>
 <span class="cm">#include &lt;stdio.h&gt;</span>
@@ -168,7 +168,7 @@ So you might do this:</p>
 
 
 <p>writer.c:</p>
-<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 
 <span class="kt">FILE</span> <span class="o">*</span><span class="n">file</span><span class="p">;</span>
 

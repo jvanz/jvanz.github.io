@@ -21,6 +21,14 @@
 
 		<!-- RSS -->
 		<link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+	<script type="text/javascript">
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ 			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+ 			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ 			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			ga('create', 'UA-73126405-1', 'auto');
+			ga('send', 'pageview');
+	</script>
 	</head>
 
 	<body class="theme-base-0d">
@@ -51,7 +59,7 @@
 					<a class="sidebar-nav-item" href="https://github.com/jvanz">
 						<i class="fa fa-github"></i>
 					</a>
-			<a class="sidebar-nav-item" href="None">
+			<a class="sidebar-nav-item" href="feeds/all.rss.xml">
 				<i class="fa fa-feed"></i>
 			</a>
 		</nav>
@@ -87,17 +95,17 @@ some hunk of a file leaving other ones for future commit.</p>
 
 
 <p>In this brand new repository there is only one commit:</p>
-<p><img alt="" src="/images/partial_commit_1.png" /></p>
+<p><img alt="" src="/images/partial_commit_1.png"></p>
 <p>And the first change is made:</p>
-<p><img alt="" src="/images/partial_commit_2.png" /></p>
+<p><img alt="" src="/images/partial_commit_2.png"></p>
 <p>Suppose a colleague requests another update in same file. He/She asks to change the name of the <code>foo()</code> function to
 <code>xpto()</code>. So after both changes the diff is:</p>
-<p><img alt="" src="/images/partial_commit_3.png" /></p>
+<p><img alt="" src="/images/partial_commit_3.png"></p>
 <p>Nice, now it's time to commit the changes. However, it's necessary commit each hunk in different commits. Fortunately
 git has a feature that will help on this situation. The commands <code>git add</code> and <code>git commit</code> allows user to select which
 hunks of a file should be added. This is done by passing the <code>-p, --patch</code> option. In our example, let's use <code>git commit</code>
 to choose the hunks should be added in first commit:</p>
-<p><img alt="" src="/images/partial_commit_4.png" /></p>
+<p><img alt="" src="/images/partial_commit_4.png"></p>
 <p>As can be seen, git shows each hunk and asks the user for what should be done with it. The options are: [y,n,q,a,d,/,s,e,?].
 To see help text, type <code>?</code>. The following text shall be shown:</p>
 <div class="highlight"><pre><span></span>y - stage this hunk
@@ -120,26 +128,26 @@ e - manually edit the current hunk
 <p>In this example, it shown the first file's hunk. In the first commit, should be
 committed the changes related with function <code>bar()</code> only. The this hunk must be
 ignored. Thus, the option <code>n</code> is the right one.</p>
-<p><img alt="" src="/images/partial_commit_5.png" /></p>
+<p><img alt="" src="/images/partial_commit_5.png"></p>
 <p>In the following, git shows all further changes as an unique hunk. It's necessary
 split them the smaller hunks. For do that, there is two options: <code>s</code> and <code>e</code>.
 The first one tells git to split the hunk into smaller pieces. The <code>e</code> option,
 in the other hand, allows user choose manually each lines should added. In this
 post the go with option <code>s</code>. Git should shown something similar to this:</p>
-<p><img alt="" src="/images/partial_commit_6.png" /></p>
+<p><img alt="" src="/images/partial_commit_6.png"></p>
 <p>The previous hunk has been split into 3 hunks. Git now will iterate all of them
 asking the user what should be done with each one. The first hunk should also be
 ignored. The second one is the first change related with the function <code>bar()</code> and
 should be added. To that task, the <code>y</code> is the right command.</p>
-<p><img alt="" src="/images/partial_commit_7.png" /></p>
+<p><img alt="" src="/images/partial_commit_7.png"></p>
 <p>Third hunk should be added too</p>
-<p><img alt="" src="/images/partial_commit_8.png" /></p>
+<p><img alt="" src="/images/partial_commit_8.png"></p>
 <p>Once there are no more hunks, as we used the <code>git commit</code> command, the editor
 will be open to the user insert the commit message. That's it.</p>
-<p><img alt="" src="/images/partial_commit_9.png" /></p>
+<p><img alt="" src="/images/partial_commit_9.png"></p>
 <p>Now with the first commit contains the only the changes within <code>bar()</code> function,
 further hunks might be committed in the second commit:</p>
-<p><img alt="" src="/images/partial_commit_10.png" /></p>
+<p><img alt="" src="/images/partial_commit_10.png"></p>
 <p>I hope you have enjoyed the tip. ;)</p>
 	<div id="disqus_thread"></div>
 		<script type="text/javascript">

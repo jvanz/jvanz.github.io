@@ -1,5 +1,192 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2016-01-28T00:00:00-02:00</updated><entry><title>Git: partial commit</title><link href="/git-partial-commit.html" rel="alternate"></link><published>2016-01-28T00:00:00-02:00</published><updated>2016-01-28T00:00:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2016-01-28:git-partial-commit.html</id><summary type="html">&lt;p&gt;This post will demonstrate one of many cool features available in Git, partial commit. This feature allows add just
+<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2017-01-10T22:55:00-02:00</updated><entry><title>Hacking your vim with python</title><link href="/hacking-your-vim-with-python.html" rel="alternate"></link><published>2017-01-10T22:55:00-02:00</published><updated>2017-01-10T22:55:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:None,2017-01-10:/hacking-your-vim-with-python.html</id><summary type="html">&lt;p&gt;I'm happy vim user for a while now. After learned the basics I started customize
+the editor to my needs/preferences and for a long time everything were well. I
+did not face anything that I could not do and this is still true. However, when
+I became a more …&lt;/p&gt;</summary><content type="html">&lt;p&gt;I'm happy vim user for a while now. After learned the basics I started customize
+the editor to my needs/preferences and for a long time everything were well. I
+did not face anything that I could not do and this is still true. However, when
+I became a more advanced user and decide to create more complex functions to help
+me while I work in my source code files, something discouraged me go ahead: the
+vim language (VimL). Don't judge me, I could study it but I do not have time and
+desire to do that. So, for some time I do not create more interesting stuff because
+of that. But a short time ago I discovered that I could write python script to
+interact with vim, like buffer, windows, tabs and so on! That's great!&lt;/p&gt;
+&lt;p&gt;This article is about how create a very simple script to read data from buffer and
+update them. :-)&lt;/p&gt;
+&lt;p&gt;Before you start write python script to do the magic in your vim buffer it is
+necessary take a look if you vim allow you use python. For that you can run the
+&lt;code&gt;vim --version&lt;/code&gt; and see if your vim has python support. The output should show
+something like &lt;code&gt;+python&lt;/code&gt;&lt;/p&gt;
+&lt;h3&gt;Scripting&lt;/h3&gt;
+&lt;p&gt;There are some way you can execute a python code in vim. You can use the commands:
+&lt;code&gt;:py[thon]&lt;/code&gt;, &lt;code&gt;:pydo&lt;/code&gt;, &lt;code&gt;:pyfile&lt;/code&gt;. In this article I'll do a short description of
+them, but I'll use just &lt;code&gt;:pyfile&lt;/code&gt; in the example.&lt;/p&gt;
+&lt;p&gt;When you decide write the python script you can write it in a separated file
+or embedded it in your vimrc. If you do not want write file for you script you
+can use the &lt;code&gt;:[range]python&lt;/code&gt; or&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;:[range]py[thon] &amp;lt;&amp;lt; {endmarker}
+{script}
+{endmarker}
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The first option is useful if you want to execute a single python statement.
+For example: &lt;code&gt;:python print "Python rocks!"&lt;/code&gt;. The second way is more interesting,
+it is allows embedded the python code inside vim script. Take a look:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;function! IcecreamInitialize()
+python3 &amp;lt;&amp;lt; EOF
+class StrawberryIcecream:
+    def __call__(self):
+        print(&amp;#39;EAT ME&amp;#39;)
+ice = StrawberryIcecream()
+ice()
+EOF
+endfunction
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Another option is the &lt;code&gt;[range]pydo {body}&lt;/code&gt; command. It is a good option if the
+script should be executed in each line of the range. In this command the &lt;code&gt;{body}&lt;/code&gt;
+is executed as &lt;code&gt;def _vim_pydo(line, linenr) {body}&lt;/code&gt;. Thus, the body script can
+get the line text and number from arguments. The function should return a string
+or None. If a string is returned the line is updated to that value. A possible
+example is &lt;code&gt;:pydo return "%s\t%d" % (line[::-1], len(line))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Last but not least is the &lt;code&gt;:[range]pyf[ile] {file}&lt;/code&gt; command. It allows load a
+separated python file and call its function with &lt;code&gt;:py&lt;/code&gt; command. This is the
+command used to load the python script in the following example.&lt;/p&gt;
+&lt;h3&gt;Vim module&lt;/h3&gt;
+&lt;p&gt;To make possible the integration between python and vim there is a python module.
+This module gives you the ability to interact with buffers, windows, tabs,
+execute vim commands and so on. This module has a bunch of methods, constants
+and objects that might used for the scripts. This article will use just a few
+of the features available in the module. They are: &lt;code&gt;vim.command(str)&lt;/code&gt;;
+&lt;code&gt;vim.current&lt;/code&gt;; and &lt;code&gt;Buffer.mark()&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;You can see a better documentation of the module typing &lt;code&gt;:help python&lt;/code&gt; in you
+vim editor.&lt;/p&gt;
+&lt;h3&gt;Let's hack!&lt;/h3&gt;
+&lt;p&gt;Let's dive deeper in the example. In this example the author of the script is
+a guy that has the boring job to write the current weather of bunch of cities
+sitting in some file. Wisely he/she decided automate that process. (Yes, it is not
+the ideal real life use case but I am not a creative person, sorry... xD). So, after
+some time reading the documentation a python script was born:&lt;/p&gt;
+&lt;div class="gist"&gt;
+    &lt;script src='https://gist.github.com/b02e61147a7f05a2a308b3d5b1d0d382.js?file=weather.py'&gt;&lt;/script&gt;
+    &lt;noscript&gt;
+        &lt;pre&gt;&lt;code&gt;#!/usr/bin/env python3
+
+import vim
+from requests import get
+
+OPEN_WEATHER_API_KEY = "your Open Weather API key"
+
+def get_weather():
+    """
+    Get weather from each line in the buffer
+    """
+    buff = vim.current.buffer
+    for idx, line in enumerate(buff):
+        buff[idx] = line + "\t" + get_openweather(line)["weather"][0]["main"] # append the weather in the line
+
+
+def get_weather_selection():
+    """
+    Method to demonstrate a "possible" integration between vim and python
+    """
+    buf = vim.current.buffer # get current vim buffer
+    start = buf.mark("&lt;") # get the begin of the selection
+    end = buf.mark("&gt;") # get the end of the selection
+    location = get_text(start, end) # get the selection text with the city name
+    line = buf[end[0]-1] + "\t" + get_openweather(location)["weather"][0]["main"] # append the weather in the line
+    buf[end[0]-1] = line # update line in the buffer
+
+def get_text(start, end):
+    """
+    Method used to get the text delimited by start and end markers
+    """
+    buf = vim.current.buffer
+    text = ""
+    for line in buf[start[0]-1:end[0]]:
+        text += line
+    last_index = (len(text) - len(buf[end[0]-1])) + end[1] + 1
+    return text[start[1]:last_index]
+
+def get_openweather(city):
+    url="http://api.openweathermap.org/data/2.5/weather" # open weather endpoint
+    payload = {"q": city, "APPID": OPEN_WEATHER_API_KEY} # prepare the request params
+    request = get(url, payload) # send request to the Open Weather API
+    return request.json()&lt;/code&gt;&lt;/pre&gt;
+    &lt;/noscript&gt;
+&lt;/div&gt;
+&lt;p&gt;It has the following features:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;function that will iterate over all rows of the current buffer
+and append the current weather for the city (the row's content is used as city's
+name)&lt;/li&gt;
+&lt;li&gt;function that will use the selected text as city's and append the weather in
+the row of the selection&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Okay, let's take a closer look... The method &lt;code&gt;get_weather()&lt;/code&gt; allow the user gets
+the weather for city names sitting on each line of the current buffer. It's nice
+to highlight the &lt;code&gt;vim.current&lt;/code&gt; object. This object provides access to
+various objects in vim. That is:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;vim.current.line&lt;/code&gt;: current line (string)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;vim.current.buffer&lt;/code&gt;: current buffer (Buffer object)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;vim.current.window&lt;/code&gt;: current window (Window object)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;vim.current.tabpage&lt;/code&gt;: current tab page (TabPage object)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;vim.current.range&lt;/code&gt;: current line range (Range object)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;That been said, the line &lt;code&gt;buff = vim.current.buffer&lt;/code&gt; is getting the current buffer
+to iterate and update it. After that, the script iterate over all buffer's rows
+calls the Open Weather API to get the weather using the row's content as city's
+name and update the row with the current value appended with the weather.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;get_weather_selection()&lt;/code&gt; is the method that uses the selected text as city
+to call the weather API. In this method, again, a reference to the current
+buffer is gotten and used the &lt;code&gt;buf.mark()&lt;/code&gt; method of the &lt;code&gt;Buffer&lt;/code&gt; object to get
+the line and column of the start and end of the selection. In vim the marks "&amp;lt;"
+and "&amp;gt;" is used to define the beginning and end of the selected text respectively.&lt;/p&gt;
+&lt;p&gt;Once we have the marks values the script calls a helper function who extract the
+selected text from the buffer and returns it. After that, the weather API is called
+and the weather is appended after the selection&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;get_text(start, end)&lt;/code&gt; and &lt;code&gt;get_openweather(city)&lt;/code&gt; methods are helper methods.
+First one is able to extract text from the buffer using tuples of (line, column)
+passed as arguments to delimitate the text should be returned. The second one
+is just a call to the Open Weather API using the python request module.&lt;/p&gt;
+&lt;p&gt;Once the script is done it can be loaded with the &lt;code&gt;pyf {file}&lt;/code&gt; command.
+As the script in discussion is a python3 code, it has to be load using the
+equivalent command to python3, that is: &lt;code&gt;py3file $HOME/.vim/weather.py&lt;/code&gt;. After
+added this line in the vimrc, it is ready to go and the methods can be called
+with:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;py3 get_weather()&lt;/code&gt; or &lt;code&gt;:'&amp;lt;,'&amp;gt;py3 get_weather_selection()&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;NOTE: be aware that there are equivalent commands, &lt;code&gt;py3&lt;/code&gt;, &lt;code&gt;py3do&lt;/code&gt; and &lt;code&gt;py3f&lt;/code&gt; to
+run/load python3 code. See more in the python3 section in the vim documentation&lt;/p&gt;
+&lt;h4&gt;Buffer&lt;/h4&gt;
+&lt;p&gt;The most important object in the example is Buffer. Buffer objects can be treat
+as sequence object. Thus, they act like lists and are mutable and to update
+a row it is necessary just assign the new value,
+&lt;code&gt;vim.current.buffer[1] = "new value for the line 2"&lt;/code&gt;. Remember, lists
+indexing start with 0 and the lines in a vim buffer with 1. In the script is
+possible see the lines being updated at lines 14 and 26.&lt;/p&gt;
+&lt;p&gt;It is also possible delete lines, &lt;code&gt;:py del vim.current.buffer[1]&lt;/code&gt; (delete the second
+row). Append new lines, &lt;code&gt;:py vim.current.buffer.append("bottom")&lt;/code&gt;. Assign variables,
+&lt;code&gt;:py vim.current.buffer.vars["foo"] = "bar"&lt;/code&gt;, and so on. You can see a complete
+description with all methods and attribute with &lt;code&gt;:help python&lt;/code&gt;&lt;/p&gt;
+&lt;h3&gt;Your turn&lt;/h3&gt;
+&lt;p&gt;This is a very, very simple example of how you can start script vim with python.
+I encourage you to read the vim documentation, play with it and create crazy
+stuff! =)&lt;/p&gt;
+&lt;p&gt;If you need more info take a look in the references, send me an e-mail or leave
+a comment. Thanks you!&lt;/p&gt;
+&lt;h4&gt;References&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;:help python&lt;/code&gt; in your vim editor&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/jvanz/dotfiles/blob/master/.vim/weather.py"&gt;weather.py&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://old.orestis.gr/blog/2008/08/10/scripting-vim-with-python/"&gt;Scripting Vim with Python&lt;/a&gt;&lt;/p&gt;</content><category term="vim"></category><category term="python"></category></entry><entry><title>Git: partial commit</title><link href="/git-partial-commit.html" rel="alternate"></link><published>2016-01-28T00:00:00-02:00</published><updated>2016-01-28T00:00:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:None,2016-01-28:/git-partial-commit.html</id><summary type="html">&lt;p&gt;This post will demonstrate one of many cool features available in Git, partial commit. This feature allows add just
+some hunk of a file leaving other ones for future commit.&lt;/p&gt;
+&lt;p&gt;Let's suppose in a project there is the following source code:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;This post will demonstrate one of many cool features available in Git, partial commit. This feature allows add just
 some hunk of a file leaving other ones for future commit.&lt;/p&gt;
 &lt;p&gt;Let's suppose in a project there is the following source code:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
@@ -26,17 +213,17 @@ some hunk of a file leaving other ones for future commit.&lt;/p&gt;
 
 
 &lt;p&gt;In this brand new repository there is only one commit:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_1.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_1.png"&gt;&lt;/p&gt;
 &lt;p&gt;And the first change is made:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_2.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_2.png"&gt;&lt;/p&gt;
 &lt;p&gt;Suppose a colleague requests another update in same file. He/She asks to change the name of the &lt;code&gt;foo()&lt;/code&gt; function to
 &lt;code&gt;xpto()&lt;/code&gt;. So after both changes the diff is:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_3.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_3.png"&gt;&lt;/p&gt;
 &lt;p&gt;Nice, now it's time to commit the changes. However, it's necessary commit each hunk in different commits. Fortunately
 git has a feature that will help on this situation. The commands &lt;code&gt;git add&lt;/code&gt; and &lt;code&gt;git commit&lt;/code&gt; allows user to select which
 hunks of a file should be added. This is done by passing the &lt;code&gt;-p, --patch&lt;/code&gt; option. In our example, let's use &lt;code&gt;git commit&lt;/code&gt;
 to choose the hunks should be added in first commit:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_4.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_4.png"&gt;&lt;/p&gt;
 &lt;p&gt;As can be seen, git shows each hunk and asks the user for what should be done with it. The options are: [y,n,q,a,d,/,s,e,?].
 To see help text, type &lt;code&gt;?&lt;/code&gt;. The following text shall be shown:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;y - stage this hunk
@@ -59,27 +246,29 @@ e - manually edit the current hunk
 &lt;p&gt;In this example, it shown the first file's hunk. In the first commit, should be
 committed the changes related with function &lt;code&gt;bar()&lt;/code&gt; only. The this hunk must be
 ignored. Thus, the option &lt;code&gt;n&lt;/code&gt; is the right one.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_5.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_5.png"&gt;&lt;/p&gt;
 &lt;p&gt;In the following, git shows all further changes as an unique hunk. It's necessary
 split them the smaller hunks. For do that, there is two options: &lt;code&gt;s&lt;/code&gt; and &lt;code&gt;e&lt;/code&gt;.
 The first one tells git to split the hunk into smaller pieces. The &lt;code&gt;e&lt;/code&gt; option,
 in the other hand, allows user choose manually each lines should added. In this
 post the go with option &lt;code&gt;s&lt;/code&gt;. Git should shown something similar to this:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_6.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_6.png"&gt;&lt;/p&gt;
 &lt;p&gt;The previous hunk has been split into 3 hunks. Git now will iterate all of them
 asking the user what should be done with each one. The first hunk should also be
 ignored. The second one is the first change related with the function &lt;code&gt;bar()&lt;/code&gt; and
 should be added. To that task, the &lt;code&gt;y&lt;/code&gt; is the right command.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_7.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_7.png"&gt;&lt;/p&gt;
 &lt;p&gt;Third hunk should be added too&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_8.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_8.png"&gt;&lt;/p&gt;
 &lt;p&gt;Once there are no more hunks, as we used the &lt;code&gt;git commit&lt;/code&gt; command, the editor
 will be open to the user insert the commit message. That's it.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_9.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_9.png"&gt;&lt;/p&gt;
 &lt;p&gt;Now with the first commit contains the only the changes within &lt;code&gt;bar()&lt;/code&gt; function,
 further hunks might be committed in the second commit:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/partial_commit_10.png" /&gt;&lt;/p&gt;
-&lt;p&gt;I hope you have enjoyed the tip. ;)&lt;/p&gt;</summary><category term="git"></category></entry><entry><title>malloc/free implementation. Just4Fun!</title><link href="/mallocfree-implementation-just4fun.html" rel="alternate"></link><published>2016-01-24T22:22:00-02:00</published><updated>2016-01-24T22:22:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2015-11-26:mallocfree-implementation-just4fun.html</id><summary type="html">&lt;p&gt;Some time ago I bought the The Linux Programming Interface book, one of the best books I have acquired.
+&lt;p&gt;&lt;img alt="" src="/images/partial_commit_10.png"&gt;&lt;/p&gt;
+&lt;p&gt;I hope you have enjoyed the tip. ;)&lt;/p&gt;</content><category term="git"></category></entry><entry><title>malloc/free implementation. Just4Fun!</title><link href="/mallocfree-implementation-just4fun.html" rel="alternate"></link><published>2015-11-26T00:08:00-02:00</published><updated>2016-01-24T22:22:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:None,2015-11-26:/mallocfree-implementation-just4fun.html</id><summary type="html">&lt;p&gt;Some time ago I bought the The Linux Programming Interface book, one of the best books I have acquired.
+One of the first chapters I read were about memory allocation. At the end of the chapter, author offers some exercises
+to the reader. Among them there is a challenging one …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Some time ago I bought the The Linux Programming Interface book, one of the best books I have acquired.
 One of the first chapters I read were about memory allocation. At the end of the chapter, author offers some exercises
 to the reader. Among them there is a challenging one. He suggests to implement the equivalent to the malloc and free
 functions. The challenge has been accepted!&lt;/p&gt;
@@ -203,14 +392,14 @@ struct is block's size and the second is a pointer to next memory block in the &
 when a program request some memory is check if the &lt;code&gt;free_list&lt;/code&gt; is already initialized (line 29). If not, it is initiated
 with a block of 0 size (lines 29 ~ 36). This is done to keep the first element in the list always the same. Thus, it is more easy to know
 when stop a loop through the list and reduce the code complexity.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/mem_init.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/mem_init.png"&gt;&lt;/p&gt;
 &lt;p&gt;Once &lt;code&gt;free_list&lt;/code&gt; initiated, a search in the list is performed. Looking for a memory block with enough size to attempt the
 request. The algorithm follows the 'first fit' approach. It means that the first memory block found with enough size is
 split and returned a pointer to the memory to the caller (lines 38 ~ 53). If any block has enough size, the heap is increased and the
 new memory is returned (line 55). The pointer returned to the user is a pointer to the memory block itself. It is
 not include the header. Does not make sense give to caller  access to the control structures. This structure is used only
 for memory management and to know what is the memory block size when the program wants to frees it.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/one_mem_allocate.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/one_mem_allocate.png"&gt;&lt;/p&gt;
 &lt;p&gt;As you can see between lines 26 and 28, all memory blocks are multiple of the header size. It means the minimum
 memory size allocated is the HEADER_SIZE * 2 (with the header). This approach facilitate the pointer arithmetic and avoid
 counting every single byte. In other words, even if the user requests less memory, the allocated memory will be always
@@ -314,7 +503,9 @@ int main(){
 &lt;p&gt;&lt;a href="http://linux.die.net/man/2/sbrk"&gt;brk, sbrk&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://www.amazon.com/Linux-Programming-Interface-System-Handbook/dp/1593272200/ref=sr_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1448501399&amp;amp;sr=1-1&amp;amp;keywords=the+linux+programming+interface"&gt;The Linux Programing Interface&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://www.amazon.com/Programming-Language-Brian-W-Kernighan/dp/0131103628/ref=sr_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1448501445&amp;amp;sr=1-1&amp;amp;keywords=the+c+programming+language"&gt;The C Programming Language&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href="https://github.com/jvanz/tlpi"&gt;Repository&lt;/a&gt;&lt;/p&gt;</summary><category term="c"></category><category term="tlpi"></category><category term="glibc"></category><category term="memory"></category></entry><entry><title>cgo: Go lang with C</title><link href="/cgo-go-lang-with-c.html" rel="alternate"></link><published>2015-09-22T00:00:00-03:00</published><updated>2015-09-22T00:00:00-03:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2015-09-22:cgo-go-lang-with-c.html</id><summary type="html">&lt;p&gt;Some weeks ago I had to customize the &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt; to integrate it with some libraries written and C.
+&lt;p&gt;&lt;a href="https://github.com/jvanz/tlpi"&gt;Repository&lt;/a&gt;&lt;/p&gt;</content><category term="c"></category><category term="tlpi"></category><category term="glibc"></category><category term="memory"></category></entry><entry><title>cgo: Go lang with C</title><link href="/cgo-go-lang-with-c.html" rel="alternate"></link><published>2015-09-22T00:00:00-03:00</published><updated>2015-09-22T00:00:00-03:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:None,2015-09-22:/cgo-go-lang-with-c.html</id><summary type="html">&lt;p&gt;Some weeks ago I had to customize the &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt; to integrate it with some libraries written and C.
+Maybe you already know Docker is written in Go language and to do this task was used &lt;a href="https://golang.org/cmd/cgo/"&gt;cgo&lt;/a&gt;
+Cgo enables integrate Go code with C. It shows itself easier and smooth comparing …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Some weeks ago I had to customize the &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt; to integrate it with some libraries written and C.
 Maybe you already know Docker is written in Go language and to do this task was used &lt;a href="https://golang.org/cmd/cgo/"&gt;cgo&lt;/a&gt;
 Cgo enables integrate Go code with C. It shows itself easier and smooth comparing with my past experiences with JNI&lt;/p&gt;
 &lt;h2&gt;Hello World!&lt;/h2&gt;
@@ -457,23 +648,25 @@ So you might do this:&lt;/p&gt;
 &lt;p&gt;This post is very, very, very simple. If you would like know more see the references below.&lt;/p&gt;
 &lt;h5&gt;References&lt;/h5&gt;
 &lt;p&gt;&lt;a href="https://golang.org/cmd/cgo/"&gt;cgo&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href="http://blog.golang.org/c-go-cgo"&gt;C? Go? Cgo!&lt;/a&gt;&lt;/p&gt;</summary><category term="golang"></category><category term="cgo"></category><category term="c"></category></entry><entry><title>Recovering missed data from stash</title><link href="/recovering-missed-data-from-stash.html" rel="alternate"></link><published>2014-02-15T00:00:00-02:00</published><updated>2014-02-15T00:00:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2014-02-15:recovering-missed-data-from-stash.html</id><summary type="html">&lt;p&gt;Today my colleague almost lost everything that he did during 4 days! Because  a wrong git command he dropped his changes saved on stash.
+&lt;p&gt;&lt;a href="http://blog.golang.org/c-go-cgo"&gt;C? Go? Cgo!&lt;/a&gt;&lt;/p&gt;</content><category term="golang"></category><category term="cgo"></category><category term="c"></category></entry><entry><title>Recovering missed data from stash</title><link href="/recovering-missed-data-from-stash.html" rel="alternate"></link><published>2014-02-15T00:00:00-02:00</published><updated>2014-02-15T00:00:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:None,2014-02-15:/recovering-missed-data-from-stash.html</id><summary type="html">&lt;p&gt;Today my colleague almost lost everything that he did during 4 days! Because  a wrong git command he dropped his changes saved on stash.
+After this sad episode we looked for a way to try to recover as least part of his work... and we did it!&lt;/p&gt;
+&lt;p&gt;First of all …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Today my colleague almost lost everything that he did during 4 days! Because  a wrong git command he dropped his changes saved on stash.
 After this sad episode we looked for a way to try to recover as least part of his work... and we did it!&lt;/p&gt;
 &lt;p&gt;First of all, when you are implementing some big feature, split it in small pieces and commit it regularly. It's not a good idea stay so long time without commit your changes,  so take care.&lt;/p&gt;
 &lt;p&gt;Let's simulate a scenario to show what you can do when you lost some changes dropped from stash.
 On our repository we have only one source file, main.c. We will use it to demonstrate the problem and the solution... so, our repository now is been like this:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_01.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_01.jpeg"&gt;&lt;/p&gt;
 &lt;p&gt;and he have only an commit, the initial commit:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_02.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_02.jpeg"&gt;&lt;/p&gt;
 &lt;p&gt;The first version of out file is:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_03.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_03.jpeg"&gt;&lt;/p&gt;
 &lt;p&gt;So, let's start to code something. For this example, we do not need some big change, is only something to put in the stash. For this, I just will add a new line. The git-diff output should be:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_04.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_04.jpeg"&gt;&lt;/p&gt;
 &lt;p&gt;Now, suppose that you have to pull some new changes from remote repository and you do not want to commit you changes. Thus, you decided to stashed your changes, pull the changes from remote repository
 and apply your changes again on the master.  For this, you execute the following command to move your changes to stash:&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;git stash&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Looking into the stash we can see our changes there:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_06.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_06.jpeg"&gt;&lt;/p&gt;
 &lt;p&gt;Now our code is in a safe place and the master branch is clean ( check with &lt;code&gt;git status&lt;/code&gt;) and you can pull the changes. After pulled the changes, it's time to apply your changes again on the master.
 But accidentally you execute&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;git stash drop&lt;/code&gt;&lt;/p&gt;
@@ -483,37 +676,38 @@ But accidentally you execute&lt;/p&gt;
 As you will seen soon git did not delete the object that contains your changes. It just remove the reference to it.
 To prove this you can used the &lt;code&gt;git-fsck&lt;/code&gt; command, this command verifies the connectivity and validity of the objects in the database.
 On the begin of the repository I executed the &lt;code&gt;git-fsck&lt;/code&gt; command and the output were:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_07.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_07.jpeg"&gt;&lt;/p&gt;
 &lt;p&gt;Basically, I asked &lt;code&gt;git-fsck&lt;/code&gt; show me the objects that are unreachable ( &lt;code&gt;--unreachable&lt;/code&gt; argument ). As you can see, it didn't show any unreachable object.
 After I dropped the changes on my stash I executed the same command, and the output was different:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_08.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_08.jpeg"&gt;&lt;/p&gt;
 &lt;p&gt;Now, we can see 3 unreachable objects. But which is our changes? Actually, I don't know. We have to search for it, for this job you can execute the &lt;code&gt;git-show&lt;/code&gt; command for visualize what are each objects.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_09.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/missing_data_from_stash_09.jpeg"&gt;&lt;/p&gt;
 &lt;p&gt;There it is! The ID 95ccbd927ad4cd413ee2a28014c81454f4ede82c is our changes. Ok, we found your missed changes. Let's recover it!
 An possible solution is checkout the ID into a new branch or apply the commit directly. Once you have the ID of the object with your changes is up to you decide what is the best way to put changes on the master branch again.
 For this example I will use the &lt;code&gt;git-stash&lt;/code&gt; to apply the commit on my master branch again.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;git stash apply 95ccbd927ad4cd413ee2a28014c81454f4ede82c&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;A important thing to remember, git run its garbage collector periodically. After the gc execution you cannot see more the unreachable objects using &lt;code&gt;git-fsck&lt;/code&gt;. ;)&lt;/p&gt;</summary><category term="git"></category></entry><entry><title>From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg</title><link href="/from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html" rel="alternate"></link><published>2014-01-24T00:00:00-02:00</published><updated>2014-01-24T00:00:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:,2014-01-24:from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html</id><summary type="html">&lt;p&gt;While I have not decided what it will be my first post about development stuff I'll post the text that me and my friend wrote to the The Document Foundation's blog. In that text we talked about out trip to LibreOffice hackfest in freiburg.
+&lt;p&gt;A important thing to remember, git run its garbage collector periodically. After the gc execution you cannot see more the unreachable objects using &lt;code&gt;git-fsck&lt;/code&gt;. ;)&lt;/p&gt;</content><category term="git"></category></entry><entry><title>From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg</title><link href="/from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html" rel="alternate"></link><published>2014-01-24T00:00:00-02:00</published><updated>2014-01-24T00:00:00-02:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:None,2014-01-24:/from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg.html</id><summary type="html">&lt;p&gt;While I have not decided what it will be my first post about development stuff I'll post the text that me and my friend wrote to the The Document Foundation's blog. In that text we talked about out trip to LibreOffice hackfest in freiburg.
+From Brazil to Germany, an Unforgettable …&lt;/p&gt;</summary><content type="html">&lt;p&gt;While I have not decided what it will be my first post about development stuff I'll post the text that me and my friend wrote to the The Document Foundation's blog. In that text we talked about out trip to LibreOffice hackfest in freiburg.
 From Brazil to Germany, an Unforgettable LibreOffice Hackfest in Freiburg&lt;/p&gt;
 &lt;p&gt;José Guilherme Vanz and Marcos Souza, LibreOffice development in Brazil&lt;/p&gt;
 &lt;p&gt;Our first contact with the LibreOffice was in FISL 2012 (International Forum of Free Software, held in Porto Alegre, Brazil). Since then, we got quickly involved with the LibreOffice development community. Now we attend events in Brazil advocating to people about the better office suite ever done!
 Months ago, after some time contributing to the project and participating in LibreOffice community, we, José Guilherme Vanz and Marcos Paulo de Souza were invited to participate in the Freiburg LibreOffice Hackfest. We were very happy and very excited! This invitation showed us that we were recognized for our humble work in the project and because this is a unique opportunity to work with people that we just know by mailing or IRC chats. So, we started the preparations of travel, such as paperwork, funds and a negotiation with our employers.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/hackfest_01.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/hackfest_01.jpg"&gt;&lt;/p&gt;
 &lt;p&gt;We arrived in Germany thinking about how to learn more about LibreOffice code base, and learn some tips and tricks to code while contributing with the project. The guys at the hackfest work full time in the project, so we were very excited to improve our skills, including stuffs about how to make a nice hackfest and try setup one in Brazil!
 Our journey in Germany began in the beautiful city of Munich, where we stayed for two days. We met Christian Lohmaier, the current release engineer of LibreOffice project. He and Florian Effenberger were patient and generous to show Munich to us and all nice places of this nice city! Thanks a lot guys!
 Then we went to Freiburg, where the Hackfest was to start. The event took three days. We had the opportunity to meet some of the most famous mega developers! It was a very nice experience to link faces and names to IRC nicks, and of course, to question the “pythons” of the project in real time! Surely, we learned a lot in these 3 days!
 Marcos did some work in LibreOffice Math. The first was about including tooltips in the new Elements Dock. To solve this bug, we basically need to create some strings with the descriptions of each element in the Elements Dock. These strings are stored inside “.src” files. These files are “compiled” and used by translators to translate each string to a specific language used in the user interface of LibreOffice. This fix was not difficult, just painful!
 The second bug that Marcos worked was about to implement a scrollbar in the Elements Dock. We did not finish this fix because he had some doubts and some points that need some other fixes. Still in the event, we talked with some others hackers about other issues.
 I was focused trying to execute a static checker to detect some error prone code and fix them&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/hackfest_02.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/hackfest_02.jpg"&gt;&lt;/p&gt;
 &lt;p&gt;After three days of hackfest, we started the “Hamburg Home Hacking Marathon”! We stayed four days in Hamburg, coding in the house of LibreOffice enginners! Again, we had the pleasure to work with Eike Ratke, Michael Stahl, Stephan Bergmann and Bjoern Michaelsen. All of them willing to help us teaching about the code base and showing some tips.
 Using our precious time with them, Marcos worked in the issue 60698 (https://bugs.freedesktop.org/show_bug.cgi?id=60698). This bug is about unify some shared libraries that are built by few files. Doing this we get a smaller library because these libraries are compiled and built just once, and by this we avoid the dispersion of shared libraries. Working in this bug, Marcos unified all shared libraries of IO module.
 Marcos tried yet to solve a bug in Calc, with the help of Eike as mentor. This bug was about ODS files using link to another sheets. By changing the referenced files, Calc was not allowed to update the data inside the file that was referencing. But, this bug was not so easy, and the problem was bigger than we thought. So we couldn’t solve this bug in that time, and Eike removed the bug from the easy hacks.
 And I was still working in static checker. I started to look to a bug of Math, about the user interface. After some work, I fixed that bug!
 In the third day, we went back to Stephan’s place, trying to solve bugs and learn more! This day Bjoern went to Stephan’s house too, totaling six guys programming in the same table! In this day Marcos worked in a bug(https://bugs.freedesktop.org/show_bug.cgi?id=63020) indicated by Bjoern. That bug was related to removing a class from LibreOffice. With Stephan’s help, Marcos could remove that class and use a better approach in the code.
 And in the last day, we went again to Eike’s home, where we enjoyed to last moments with the great developers of LibreOffice! We talked a little about their work and how they work daily.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="/images/hackfest_02.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/hackfest_02.jpg"&gt;&lt;/p&gt;
 &lt;p&gt;For sure, these days were very fruitful, and we learned a lot of things that we’ll use in the future.
 We came back to Brazil and we want to say a big THANK YOU for all of you guys! To the  Brazilian community, that welcomed us and keeps helping us. To The Document Foundation, who gave us this opportunity. To all developers that are helping us since we started in the project, specially YOU we met this wonderful German journey, and all people involved directly or indirectly in this amazing project!&lt;/p&gt;
 &lt;p&gt;Source: http://blog.documentfoundation.org/2013/12/04/from-brazil-to-germany-an-unforgettable-libreoffice-hackfest-in-freiburg/&lt;/p&gt;
-&lt;p&gt;Portuguese version: http://blog.pt-br.libreoffice.org/2013/12/09/do-brasil-para-a-alemanha-um-inesquecivel-hackfest-em-freiburg/&lt;/p&gt;</summary><category term="hackfest"></category><category term="libreoffice"></category><category term="travel"></category><category term="germany"></category></entry></feed>
+&lt;p&gt;Portuguese version: http://blog.pt-br.libreoffice.org/2013/12/09/do-brasil-para-a-alemanha-um-inesquecivel-hackfest-em-freiburg/&lt;/p&gt;</content><category term="hackfest"></category><category term="libreoffice"></category><category term="travel"></category><category term="germany"></category></entry></feed>

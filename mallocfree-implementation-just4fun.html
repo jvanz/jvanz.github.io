@@ -21,6 +21,14 @@
 
 		<!-- RSS -->
 		<link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+	<script type="text/javascript">
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ 			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+ 			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ 			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			ga('create', 'UA-73126405-1', 'auto');
+			ga('send', 'pageview');
+	</script>
 	</head>
 
 	<body class="theme-base-0d">
@@ -51,7 +59,7 @@
 					<a class="sidebar-nav-item" href="https://github.com/jvanz">
 						<i class="fa fa-github"></i>
 					</a>
-			<a class="sidebar-nav-item" href="None">
+			<a class="sidebar-nav-item" href="feeds/all.rss.xml">
 				<i class="fa fa-feed"></i>
 			</a>
 		</nav>
@@ -184,14 +192,14 @@ struct is block's size and the second is a pointer to next memory block in the <
 when a program request some memory is check if the <code>free_list</code> is already initialized (line 29). If not, it is initiated
 with a block of 0 size (lines 29 ~ 36). This is done to keep the first element in the list always the same. Thus, it is more easy to know
 when stop a loop through the list and reduce the code complexity.</p>
-<p><img alt="" src="/images/mem_init.png" /></p>
+<p><img alt="" src="/images/mem_init.png"></p>
 <p>Once <code>free_list</code> initiated, a search in the list is performed. Looking for a memory block with enough size to attempt the
 request. The algorithm follows the 'first fit' approach. It means that the first memory block found with enough size is
 split and returned a pointer to the memory to the caller (lines 38 ~ 53). If any block has enough size, the heap is increased and the
 new memory is returned (line 55). The pointer returned to the user is a pointer to the memory block itself. It is
 not include the header. Does not make sense give to caller  access to the control structures. This structure is used only
 for memory management and to know what is the memory block size when the program wants to frees it.</p>
-<p><img alt="" src="/images/one_mem_allocate.png" /></p>
+<p><img alt="" src="/images/one_mem_allocate.png"></p>
 <p>As you can see between lines 26 and 28, all memory blocks are multiple of the header size. It means the minimum
 memory size allocated is the HEADER_SIZE * 2 (with the header). This approach facilitate the pointer arithmetic and avoid
 counting every single byte. In other words, even if the user requests less memory, the allocated memory will be always

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<link href="http://gmpg.org/xfn/11" rel="profile">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+		<!-- Enable responsiveness on mobile devices-->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+		<title>vanz</title>
+
+		<!-- CSS -->
+		<link href="//fonts.googleapis.com/" rel="dns-prefetch">
+		<link href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Abril+Fatface|PT+Sans:400,400italic,700&amp;subset=latin,latin-ext" rel="stylesheet">
+
+		<link rel="stylesheet" href="/theme/css/poole.css" />
+		<link rel="stylesheet" href="/theme/css/hyde.css" />
+		<link rel="stylesheet" href="/theme/css/syntax.css" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+
+		<!-- RSS -->
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+	</head>
+
+	<body class="theme-base-0d">
+<div class="sidebar">
+	<div class="container sidebar-sticky">
+		<div class="sidebar-about">
+
+			<h1>
+				<a href="/">
+					<img class="profile-picture" src="/images/avatar.jpg">
+					vanz
+				</a>
+			</h1>
+			<p class="lead"></p>
+			<p class="lead">I'm José Guilherme Vanz, from south Brazil. Working as Software Engineer. I love Open Source and programming </p>
+			<p></p>
+		</div>
+		<nav class="sidebar-nav">
+					<a class="sidebar-nav-item" href="mailto:jose.guilherme.vanz@gmail.com">
+						<i class="fa fa-envelope"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://twitter.com/vanzstuff">
+						<i class="fa fa-twitter"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://br.linkedin.com/in/jvanz">
+						<i class="fa fa-linkedin"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://github.com/jvanz">
+						<i class="fa fa-github"></i>
+					</a>
+			<a class="sidebar-nav-item" href="None">
+				<i class="fa fa-feed"></i>
+			</a>
+		</nav>
+	</div>
+</div>		<div class="content container">
+<div class="post">
+	<h1 class="post-title">Rascunho: Como funciona o robozinho do Serenata que baixa os diários oficiais?</h1>
+	<span class="post-date">Mon 25 November 2019</span>
+	<p>Recentemente comecei a fazer parte do programa de <a href="https://embaixadoras.ok.org.br/">embaixadores</a> da Open Knowledge Brasil (OKBR). Como minha primeira contribuição, comecei adicionar novos spiders no <a href="https://github.com/okfn-brasil/diario-oficial">diario-oficial</a> para a raspagem de dados dos diários oficiais de cada município brasileiro. Como sou de Santa Catarina, decidi inicial
+com as cidades do meu Estado. E felizmente, no tempo de escrita deste artigo, minha primeira <a href="https://github.com/okfn-brasil/diario-oficial/pull/135">pull request</a> está aguardando aprovação! :)</p>
+<p>Durante esse meio tempo, outros embaixadores demonstraram interesse em adicionar ou modificar os spiders para suas cidades. Ai que entra esse artigo... eu pretendo explicar na forma mais didática que eu conseguir, tudo o que é necessário para começar a entender como adicionar ou alterar um spider. Para isso, irei explicar como funciona cada parte necessária para isso. Incluindo como baixar o código, como rodar um spider, um pouco de python, scrapy e HTML, entre outros.
+Não pretendo ser muito técnico para deixar o documento mais acessivel possível. Mas também não muito superficial que não diga nada. Por favor, entre em contato se sentir falta de algo! Então vamos lá...</p>
+<h3>diario-oficial</h3>
+<p>O projeto <a href="https://github.com/okfn-brasil/diario-oficial">diario-oficial</a> da OKBR, tem como objetivo realizar a raspagem de dados dos diário oficiais do maior número de municípios brasileiros possíveis. Como fazemos isso? Bom, os diários oficiais são distribuídos em arquivos doc, pdf e etc. Para que conseguir ter todos esses arquivos utilizamos um robozinho que literalmente abre todas as páginas dos diários oficiais de cada município e baixa todos esses arquivos. Uma vez com os arquivos baixados, convertemos eles em texto (arquivos txt) e pronto! Eles podem serem analisados mais facilmente e fazer as mágicas da ciência de dados! :)</p>
+<p>Antes de mais nada vamos rodar um spider para ver como funciona. Depois vamos ver como é escrito um spider. Para baixar o projeto você ira precisar do <code>git</code>. A instalação do <code>git</code> vai variar de acordo com seu ambiente. Veja a documentação sobre a instalação <a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">aqui</a>. Se precisar de ajuda, não deixe de falar nos canais de comunicação dos Embaixadores. Podemos ajudar por lá! Aliás, esse artigo será todo baseado no meu ambiente, que é um Linux. Não creio que vão existir grandes diferenças entre os sistemas que possa impossibilitar de seguir esse material. A principal diferença, acredito, que seja como irá baixar o repositório do projeto. Mas como disse anteriormente, não hesite em perguntar!</p>
+<p>Blz, uma vez com o <code>git</code>instalado precisamos baixar o repositório, ou seja o código que o robozinho ira executar. Para isso, vá até a página do projeto no github e copie a URL para você clonar o repositório:</p>
+<p><img alt="" src="/images/repo_diario_oficial.png"></p>
+<p>Uma vez com a URL podemos clonar o repositório. Clonar é um termo do <code>git</code> que basicamente é um sinonimo para baixar um repositório:</p>
+<div class="highlight"><pre><span></span>jvanz@earth:~&gt; git clone https://github.com/okfn-brasil/diario-oficial.git
+Cloning into <span class="s1">&#39;diario-oficial&#39;</span>...
+remote: Enumerating objects: <span class="m">30</span>, <span class="k">done</span>.
+remote: Counting objects: <span class="m">100</span>% <span class="o">(</span><span class="m">30</span>/30<span class="o">)</span>, <span class="k">done</span>.
+remote: Compressing objects: <span class="m">100</span>% <span class="o">(</span><span class="m">21</span>/21<span class="o">)</span>, <span class="k">done</span>.
+remote: Total <span class="m">2253</span> <span class="o">(</span>delta <span class="m">13</span><span class="o">)</span>, reused <span class="m">19</span> <span class="o">(</span>delta <span class="m">9</span><span class="o">)</span>, pack-reused <span class="m">2223</span>
+Receiving objects: <span class="m">100</span>% <span class="o">(</span><span class="m">2253</span>/2253<span class="o">)</span>, <span class="m">11</span>.68 MiB <span class="p">|</span> <span class="m">7</span>.04 MiB/s, <span class="k">done</span>.
+Resolving deltas: <span class="m">100</span>% <span class="o">(</span><span class="m">1320</span>/1320<span class="o">)</span>, <span class="k">done</span>.
+</pre></div>
+
+
+<p>Agora que você já tem o código fonte na sua máquina, podemos executar algum spider que já existe. Os spider já existentes podem ser encontrados no diretório <code>processing/data_collection/gazette/spiders/</code>:</p>
+<div class="highlight"><pre><span></span>jvanz@earth:~/diario-oficial&gt; ls processing/data_collection/gazette/spiders/
+al_maceio.py            base.py                      go_goiania.py       pr_cascavel.py       pr_maringa.py         rr_boa_vista.py      sp_campinas.py   sp_jundiai.py              to_palmas.py
+am_manaus.py            ce_fortaleza.py              __init__.py         pr_curitiba.py       pr_ponta_grossa.py    rs_caxias_do_sul.py  sp_franca.py     sp_santos.py
+ba_feira_de_santana.py  es_associacao_municipios.py  mg_uberaba.py       pr_foz_do_iguacu.py  rj_rio_de_janeiro.py  rs_porto_alegre.py   sp_guaruja.py    sp_sao_jose_dos_campos.py
+ba_salvador.py          go_aparecida_de_goiania.py   ms_campo_grande.py  pr_londrina.py       ro_porto_velho.py     sc_florianopolis.py  sp_guarulhos.py  to_araguaina.py
+jvanz@earth:~/diario-oficial&gt; 
+</pre></div>
+
+
+<p>Agora que já sabemos quais sãos as cidades já mapeadas, vamos rodar nosso robozinho para baixar os arquivos?
+Para rodar o robozinho e baixar os arquivos de Florianópolis - SC, podemos executar o seguinte comando:</p>
+<div class="highlight"><pre><span></span>$ docker-compose run --rm processing bash -c <span class="s2">&quot;cd data_collection &amp;&amp; scrapy crawl sc_florianopolis&quot;</span>
+</pre></div>
+
+
+<p>Note que para executar o nosso robô, precisamos instalar o docker e o docker-comose. Veja como instala-los <a href="https://docs.docker.com/v17.12/docker-for-windows/install/">aqui</a> e <a href="https://docs.docker.com/compose/install/">aqui</a></p>
+<p>Você provavelmente irá ver algo parecido com isso:</p>
+<div class="highlight"><pre><span></span>2019-11-26 01:40:56 [scrapy.utils.log] INFO: Scrapy 1.6.0 started (bot: gazette)
+2019-11-26 01:40:56 [scrapy.utils.log] INFO: Versions: lxml 4.4.1.0, libxml2 2.9.9, cssselect 1.1.0, parsel 1.5.2, w3lib 1.21.0, Twisted 19.10.0, Python 3.6.8 (default, Jun 11 2019, 01:16:11) - [GCC 6.3.0 20170516], pyOpenSSL 19.0.0 (OpenSSL 1.1.1d  10 Sep 2019), cryptography 2.8, Platform Linux-4.12.14-lp151.28.20-default-x86_64-with-debian-9.9
+2019-11-26 01:40:56 [scrapy.crawler] INFO: Overridden settings: {&#39;BOT_NAME&#39;: &#39;gazette&#39;, &#39;LOG_FILE&#39;: &#39;sc_florianopolis&#39;, &#39;NEWSPIDER_MODULE&#39;: &#39;gazette.spiders&#39;, &#39;SPIDER_MODULES&#39;: [&#39;gazette.spiders&#39;]}
+2019-11-26 01:40:56 [scrapy.extensions.telnet] INFO: Telnet Password: bc2ce55e70ec1566
+2019-11-26 01:40:56 [scrapy.middleware] INFO: Enabled extensions:
+[&#39;scrapy.extensions.corestats.CoreStats&#39;,
+ &#39;scrapy.extensions.telnet.TelnetConsole&#39;,
+ &#39;scrapy.extensions.memusage.MemoryUsage&#39;,
+ &#39;scrapy.extensions.logstats.LogStats&#39;]
+2019-11-26 01:40:56 [scrapy.middleware] INFO: Enabled downloader middlewares:
+[&#39;scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.useragent.UserAgentMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.retry.RetryMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.redirect.RedirectMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.cookies.CookiesMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware&#39;,
+ &#39;scrapy.downloadermiddlewares.stats.DownloaderStats&#39;]
+2019-11-26 01:40:56 [scrapy.middleware] INFO: Enabled spider middlewares:
+[&#39;scrapy.spidermiddlewares.httperror.HttpErrorMiddleware&#39;,
+ &#39;scrapy.spidermiddlewares.offsite.OffsiteMiddleware&#39;,
+ &#39;scrapy.spidermiddlewares.referer.RefererMiddleware&#39;,
+ &#39;scrapy.spidermiddlewares.urllength.UrlLengthMiddleware&#39;,
+ &#39;scrapy.spidermiddlewares.depth.DepthMiddleware&#39;]
+2019-11-26 01:40:56 [scrapy.middleware] INFO: Enabled item pipelines:
+[&#39;gazette.pipelines.GazetteDateFilteringPipeline&#39;,
+ &#39;gazette.parser.GazetteFilesPipeline&#39;,
+ &#39;scrapy.pipelines.files.FilesPipeline&#39;,
+ &#39;gazette.pipelines.ExtractTextPipeline&#39;,
+ &#39;gazette.pipelines.PostgreSQLPipeline&#39;]
+2019-11-26 01:40:56 [scrapy.core.engine] INFO: Spider opened
+2019-11-26 01:40:56 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
+2019-11-26 01:40:56 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6023
+2019-11-26 01:40:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+2019-11-26 01:40:58 [scrapy.core.engine] DEBUG: Crawled (200) &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_20.19.06.6b3ba3f7d8914621f5065d4d0f6c9d5e.pdf&gt; (referer: None)
+2019-11-26 01:40:58 [scrapy.pipelines.files] DEBUG: File (downloaded): Downloaded file from &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_20.19.06.6b3ba3f7d8914621f5065d4d0f6c9d5e.pdf&gt; referred in &lt;None&gt;
+2019-11-26 01:40:58 [scrapy.core.engine] DEBUG: Crawled (200) &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_23.01.36.df3583c76e3e2ce083a2275cf3e9adbe.pdf&gt; (referer: None)
+2019-11-26 01:40:58 [scrapy.pipelines.files] DEBUG: File (downloaded): Downloaded file from &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_23.01.36.df3583c76e3e2ce083a2275cf3e9adbe.pdf&gt; referred in &lt;None&gt;
+2019-11-26 01:40:58 [scrapy.pipelines.files] DEBUG: File (uptodate): Downloaded file from &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_20.19.06.6b3ba3f7d8914621f5065d4d0f6c9d5e.pdf&gt; referred in &lt;None&gt;
+2019-11-26 01:40:58 [scrapy.pipelines.files] DEBUG: File (uptodate): Downloaded file from &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_23.01.36.df3583c76e3e2ce083a2275cf3e9adbe.pdf&gt; referred in &lt;None&gt;
+2019-11-26 01:40:58 [scrapy.core.scraper] DEBUG: Scraped from &lt;200 http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt;
+{&#39;date&#39;: datetime.date(2019, 11, 18),
+ &#39;file_checksum&#39;: &#39;f24ca0401f64b6de3dc8a647dcbbea52&#39;,
+ &#39;file_path&#39;: &#39;full/c7955799d47d4fe59b6f582dad4b5c172508dac9.pdf&#39;,
+ &#39;file_url&#39;: &#39;http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_20.19.06.6b3ba3f7d8914621f5065d4d0f6c9d5e.pdf&#39;,
+ &#39;is_extra_edition&#39;: False,
+ &#39;power&#39;: &#39;executive_legislature&#39;,
+ &#39;scraped_at&#39;: datetime.datetime(2019, 11, 26, 1, 40, 57, 88559),
+ &#39;source_text&#39;: &#39;                            DIÁRIO OFICIAL ELETRÔNICO\n&#39;
+                &#39;                                              DO MUNICÍPIO DE &#39;
+                &#39;FLORIANÓPOLIS\n&#39;
+                &#39;Edição Nº 2568                          Florianópolis/SC, &#39;
+                &#39;segunda-feira, 18 de novembro de &#39;
+                &#39;2019                                                                  &#39;
+                &#39;pg. 1\n&#39;
+                &#39;                              &#39;
+                &#39;Sumário:                                         &#39;
+                &#39;Administrativo e Financeiro, lotado na Secretaria\n&#39;
+                &#39;Orgãos &#39;
+                &#39;Municipais                                                     &#39;
+                &#39;Pg.      Municipal da Casa Civil, matrícula 49327-9,\n&#39;
+                &#39;SECRETARIA MUNICIPAL DA CASA &#39;
+                &#39;CIVIL                                     1\n&#39;
+                &#39;                                                                               &#39;
+                &#39;devidamente habilitado pela CNH sob nº\n&#39;
+                &#39;                                                                               &#39;
+                &#39;05084675850, categoria AB. Art. 2º A\n&#39;
+                &#39;SECRETARIA MUNICIPAL DE &#39;
+                &#39;ADMINISTRAÇÃO                                  1\n&#39;
+                &#39;                                                                               &#39;
+                &#39;responsabilidade administrativa, civil e penal, em\n&#39;
+                &#39;SECRETARIA MUNICIPAL DA FAZENDA                   &#39;
+                &#39;2                            caso de colisões, lesões &#39;
+                &#39;corporais ou mesmo óbitos\n&#39;
+                &#39;SECRETARIA MUNICIPAL DE TRANSPARÊNCIA,AUDITORIA &#39;
+                &#39;E                              decorrentes do objetivo desta &#39;
+
+                [...]
+                Texto omitido porque é MUITA coisa
+                [...]
+
+                &#39;Portaria, qual seja,\n&#39;
+                &#39;CONTROLE                                          &#39;
+                &#39;4                            autorizar a condução do &#39;
+                &#39;automóvel da Secretaria\n&#39;
+                &#39;SECRETARIA MUNICIPAL DE &#39;
+                &#39;EDUCAÇÃO                                       5       &#39;
+                &#39;Municipal da Casa Civil, conforme termo de\n&#39;
+                &#39;SECRETARIA MUNICIPAL DE &#39;
+                &#39;INFRAESTRUTURA                                 6       &#39;
+                              &#39;\n&#39;
+                &#39;\n&#39;
+                &#39;\n&#39;
+                &#39;S.M.C.C.\n&#39;
+                &#39;SECRETÁRIO: EVERSON &#39;
+                &#39;MENDES                                        CONTROLE: &#39;
+                &#39;THAMARA MALTA                                            &#39;
+                &#39;TELEFONE: (48) 3251-6062\n&#39;
+                &#39;\x0c&#39;,
+ &#39;territory_id&#39;: &#39;4205407&#39;}
+2019-11-26 01:40:58 [scrapy.core.scraper] DEBUG: Scraped from &lt;200 http://www.pm
+</pre></div>
+
+
+<p>Vamos dar uma analisada no que isso tudo significa:</p>
+<p>Esse comando mostra qual é a página de web que o nosso robô está acessando e procurando os arquivos:</p>
+<div class="highlight"><pre><span></span>2019-11-26 01:40:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;POST http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt; (referer: None)
+</pre></div>
+
+
+<p>Esse são arquivos que ele encontrou e baixou:</p>
+<div class="highlight"><pre><span></span>2019-11-26 01:40:58 [scrapy.core.engine] DEBUG: Crawled (200) &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_20.19.06.6b3ba3f7d8914621f5065d4d0f6c9d5e.pdf&gt; (referer: None)
+2019-11-26 01:40:58 [scrapy.pipelines.files] DEBUG: File (downloaded): Downloaded file from &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_20.19.06.6b3ba3f7d8914621f5065d4d0f6c9d5e.pdf&gt; referred in &lt;None&gt;
+2019-11-26 01:40:58 [scrapy.core.engine] DEBUG: Crawled (200) &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_23.01.36.df3583c76e3e2ce083a2275cf3e9adbe.pdf&gt; (referer: None)
+2019-11-26 01:40:58 [scrapy.pipelines.files] DEBUG: File (downloaded): Downloaded file from &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_23.01.36.df3583c76e3e2ce083a2275cf3e9adbe.pdf&gt; referred in &lt;None&gt;
+2019-11-26 01:40:58 [scrapy.pipelines.files] DEBUG: File (uptodate): Downloaded file from &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_20.19.06.6b3ba3f7d8914621f5065d4d0f6c9d5e.pdf&gt; referred in &lt;None&gt;
+2019-11-26 01:40:58 [scrapy.pipelines.files] DEBUG: File (uptodate): Downloaded file from &lt;GET http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_23.01.36.df3583c76e3e2ce083a2275cf3e9adbe.pdf&gt; referred in &lt;None&gt;
+</pre></div>
+
+
+<p>Da uma olhada nisso, aqui é texto extraido do arquivo baixado do site do diário oficial:</p>
+<div class="highlight"><pre><span></span>2019-11-26 01:40:58 [scrapy.core.scraper] DEBUG: Scraped from &lt;200 http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&gt;
+{&#39;date&#39;: datetime.date(2019, 11, 18),
+ &#39;file_checksum&#39;: &#39;f24ca0401f64b6de3dc8a647dcbbea52&#39;,
+ &#39;file_path&#39;: &#39;full/c7955799d47d4fe59b6f582dad4b5c172508dac9.pdf&#39;,
+ &#39;file_url&#39;: &#39;http://www.pmf.sc.gov.br/arquivos/diario/pdf/18_11_2019_20.19.06.6b3ba3f7d8914621f5065d4d0f6c9d5e.pdf&#39;,
+ &#39;is_extra_edition&#39;: False,
+ &#39;power&#39;: &#39;executive_legislature&#39;,
+ &#39;scraped_at&#39;: datetime.datetime(2019, 11, 26, 1, 40, 57, 88559),
+ &#39;source_text&#39;: &#39; DIÁRIO OFICIAL ELETRÔNICO\n&#39;
+ &#39; DO MUNICÍPIO DE &#39;
+ &#39;FLORIANÓPOLIS\n&#39;
+ &#39;Edição Nº 2568 Florianópolis/SC, &#39;
+ &#39;segunda-feira, 18 de novembro de &#39;
+ &#39;2019 &#39;
+ &#39;pg. 1\n&#39;
+ &#39; &#39;
+ &#39;Sumário: &#39;
+ &#39;Administrativo e Financeiro, lotado na Secretaria\n&#39;
+ &#39;Orgãos &#39;
+ &#39;Municipais &#39;
+ &#39;Pg. Municipal da Casa Civil, matrícula 49327-9,\n&#39;
+ &#39;SECRETARIA MUNICIPAL DA CASA &#39;
+ &#39;CIVIL 1\n&#39;
+ &#39; &#39;
+ &#39;devidamente habilitado pela CNH sob nº\n&#39;
+ &#39; &#39;
+ &#39;05084675850, categoria AB. Art. 2º A\n&#39;
+ &#39;SECRETARIA MUNICIPAL DE &#39;
+ &#39;ADMINISTRAÇÃO 1\n&#39;
+ &#39; &#39;
+ &#39;responsabilidade administrativa, civil e penal, em\n&#39;
+ &#39;SECRETARIA MUNICIPAL DA FAZENDA &#39;
+ &#39;2 caso de colisões, lesões &#39;
+ &#39;corporais ou mesmo óbitos\n&#39;
+ &#39;SECRETARIA MUNICIPAL DE TRANSPARÊNCIA,AUDITORIA &#39;
+ &#39;E decorrentes do objetivo desta &#39;
+                  [...]
+                Texto omitido porque é MUITA coisa
+                [...]
+ &#39;Portaria, qual seja,\n&#39;
+ &#39;CONTROLE &#39;
+ &#39;4 autorizar a condução do &#39;
+ &#39;automóvel da Secretaria\n&#39;
+ &#39;SECRETARIA MUNICIPAL DE &#39;
+ &#39;EDUCAÇÃO 5 &#39;
+ &#39;Municipal da Casa Civil, conforme termo de\n&#39;
+ &#39;SECRETARIA MUNICIPAL DE &#39;
+ &#39;INFRAESTRUTURA 6 &#39;
+ &#39;\n&#39;
+ &#39;\n&#39;
+ &#39;\n&#39;
+ &#39;S.M.C.C.\n&#39;
+ &#39;SECRETÁRIO: EVERSON &#39;
+ &#39;MENDES CONTROLE: &#39;
+ &#39;THAMARA MALTA &#39;
+ &#39;TELEFONE: (48) 3251-6062\n&#39;
+ &#39;\x0c&#39;,
+ &#39;territory_id&#39;: &#39;4205407&#39;}
+</pre></div>
+
+
+<p>Você pode deixar rodando até o robozinho baixar tudo, mas isso vai levar um tempinho. Para parar o robô, aperte <code>Ctrl + c</code>.
+Agora dê uma olhada nos arquivos baixados em ``:</p>
+<div class="highlight"><pre><span></span>jvanz@earth:~/serenata/diario-oficial&gt; ls data/full/                                                                                                                                                              
+000206dc56c5753213168d1aad67e6d925862c0b.doc       3f67f0c7ee0e054bd477dd585bcaf895c712a175.doc.txt   7f3e870070e45083e503cc9858068d0dd87af122.pdf.txt   bf7f18a1e85067bee44f26cb5cd62274df08aa89.doc             
+000206dc56c5753213168d1aad67e6d925862c0b.doc.txt   3f6a9abc3115beaa26b20cd5e43f403a570c9a4e.doc       7f3fb482b9472f8fcc03c84090ee9825b19b9483.doc       bf7f18a1e85067bee44f26cb5cd62274df08aa89.doc.txt         
+00067ca470afa2d2ac2f9fffc0bc4f6c9e9cc0ef.pdf       3f6a9abc3115beaa26b20cd5e43f403a570c9a4e.doc.txt   7f3fb482b9472f8fcc03c84090ee9825b19b9483.doc.txt   bf7f52e8382df0d6ec569dae967018a07168c672.doc             
+00067ca470afa2d2ac2f9fffc0bc4f6c9e9cc0ef.pdf.txt   3f6b8276365051fce95e154c128d2cca300b2ea0.doc       7f45558c7ade30fecb2f3c068be633190953fb71.doc       bf7f52e8382df0d6ec569dae967018a07168c672.doc.txt         
+000ce6ae16c71f4e082191be246d8f5b0925984e.doc       3f6b8276365051fce95e154c128d2cca300b2ea0.doc.txt   7f45558c7ade30fecb2f3c068be633190953fb71.doc.txt   bf807874e9126e9c019490b236288c36d8622f43.pdf             
+000ce6ae16c71f4e082191be246d8f5b0925984e.doc.txt   3f6e379f971523a0827788f275ad606d1bec2f93.doc       7f49aafd3f51b330136164aca8170a26ab8c679e.doc       bf807874e9126e9c019490b236288c36d8622f43.pdf.txt         
+0011b654ba29d6d4415908f1251245b4f7f3909e.doc       3f6e379f971523a0827788f275ad606d1bec2f93.doc.txt   7f49aafd3f51b330136164aca8170a26ab8c679e.doc.txt   bf82c035df0480b351e5594baf9d55262562d307.doc             
+0011b654ba29d6d4415908f1251245b4f7f3909e.doc.txt   3f70de7787371b4b2676a61587a592239311988c.doc       7f5168d009b6c54d1f03f8663d56e5692fe29af1.doc       bf82c035df0480b351e5594baf9d55262562d307.doc.txt         
+00139767bba460a2d731e7e08f69d1ad065d9d42.pdf       3f70de7787371b4b2676a61587a592239311988c.doc.txt   7f5168d009b6c54d1f03f8663d56e5692fe29af1.doc.txt   bf8c5d2b8a0ffd03090a25d66791c9a58e1da1f5.doc             
+00139767bba460a2d731e7e08f69d1ad065d9d42.pdf.txt   3f7393fbda95cc315b50af2af0f22f11ffbf818a.doc       7f554d50573d1d4fb1106ca921ab810e6e928de1.doc       bf8c5d2b8a0ffd03090a25d66791c9a58e1da1f5.doc.txt         
+00195ec0e20d47e36f9dd156652c971d01e996e3.pdf       3f7393fbda95cc315b50af2af0f22f11ffbf818a.doc.txt   7f554d50573d1d4fb1106ca921ab810e6e928de1.doc.txt   bf8f2dc63020f0fd4d354a1780b5393dc88828c0.pdf             
+00195ec0e20d47e36f9dd156652c971d01e996e3.pdf.txt   3f77937f5e7cfa9e2019dec8b28cfc1d1e4f091e.doc       7f5bd9eb72d24d7ce3c40b1f8a8885c5cedc606a.doc       bf8f2dc63020f0fd4d354a1780b5393dc88828c0.pdf.txt         
+</pre></div>
+
+
+<p>Ótimo! Agora que você já rodou o robô. Está na hora de entendermos mais a fundo algumas partes que fazem isso tudo funcionar.</p>
+<h3>Python</h3>
+<p>Python é a linguagem de programação que utilizamos para escrever o nosso robô. Não pretendo me aprofundar muito em Python porque isso é um mundo gigantesco que, por si só, renderia muito e muitos artigos. Mas para ajudar aqueles que estão querendo aprender, sugiro alguns materiais que podem ser encontrados na Internet:</p>
+<p><a href="https://www.youtube.com/channel/UCripRddD4BnaMcU833ExuwA/feed">Python para zumbis</a></p>
+<p><a href="https://github.com/pythonbnu/workshop-python-iniciante">Tutorial realizado pelo Grupy Blumenau</a></p>
+<h3>Scrapy</h3>
+<p>Scrapy é a biblioteca que utilizamos para acessar, navegar e encontrar os que queremos nas páginas dos diários oficiais. Podemos dizer que é o coração do nosso robô. Essa lib faz o trabalho sujo que baixar e deixar disponíveis de maneira mais fácil os dados das páginas que estamos vasculhando.</p>
+<p>Vamos dar uma olhada como podemos é definido para o nosso robô  a maneira de navegar pelas páginas de nossas cidades. Para exemplificar, vou utilizar a cidade de Florianópolis:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">dateparser</span> <span class="kn">import</span> <span class="n">parse</span>
+<span class="kn">from</span> <span class="nn">dateutil.relativedelta</span> <span class="kn">import</span> <span class="n">relativedelta</span>
+<span class="kn">from</span> <span class="nn">scrapy</span> <span class="kn">import</span> <span class="n">FormRequest</span>
+
+<span class="kn">from</span> <span class="nn">gazette.items</span> <span class="kn">import</span> <span class="n">Gazette</span>
+<span class="kn">from</span> <span class="nn">gazette.spiders.base</span> <span class="kn">import</span> <span class="n">BaseGazetteSpider</span>
+
+
+<span class="k">class</span> <span class="nc">ScFlorianopolisSpider</span><span class="p">(</span><span class="n">BaseGazetteSpider</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;sc_florianopolis&quot;</span>
+    <span class="n">URL</span> <span class="o">=</span> <span class="s2">&quot;http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&quot;</span>
+    <span class="n">TERRITORY_ID</span> <span class="o">=</span> <span class="s2">&quot;4205407&quot;</span>
+    <span class="n">AVAILABLE_FROM</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># actually from June/2009</span>
+
+    <span class="k">def</span> <span class="nf">start_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+        <span class="k">while</span> <span class="n">target</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">AVAILABLE_FROM</span><span class="p">:</span>
+            <span class="n">year</span><span class="p">,</span> <span class="n">month</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">year</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">month</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ano</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">mes</span><span class="o">=</span><span class="n">month</span><span class="p">,</span> <span class="n">passo</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="n">enviar</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">FormRequest</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">URL</span><span class="p">,</span> <span class="n">formdata</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">)</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">target</span> <span class="o">+</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">css</span><span class="p">(</span><span class="s2">&quot;ul.listagem li a&quot;</span><span class="p">):</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pdf_url</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">yield</span> <span class="n">Gazette</span><span class="p">(</span>
+                <span class="n">date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_date</span><span class="p">(</span><span class="n">link</span><span class="p">),</span>
+                <span class="n">file_urls</span><span class="o">=</span><span class="p">(</span><span class="n">url</span><span class="p">,),</span>
+                <span class="n">is_extra_edition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_extra</span><span class="p">(</span><span class="n">link</span><span class="p">),</span>
+                <span class="n">territory_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">TERRITORY_ID</span><span class="p">,</span>
+                <span class="n">power</span><span class="o">=</span><span class="s2">&quot;executive_legislature&quot;</span><span class="p">,</span>
+                <span class="n">scraped_at</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+            <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_pdf_url</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="n">relative_url</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">css</span><span class="p">(</span><span class="s2">&quot;::attr(href)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract_first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">relative_url</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.pdf&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">urljoin</span><span class="p">(</span><span class="n">relative_url</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_date</span><span class="p">(</span><span class="n">link</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">css</span><span class="p">(</span><span class="s2">&quot;::text&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">())</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\d{1,2}\s+de\s+\w+\s+de\s+\d{4}&quot;</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="k">return</span> <span class="n">parse</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(),</span> <span class="n">languages</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;pt&quot;</span><span class="p">,))</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">is_extra</span><span class="p">(</span><span class="n">link</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">css</span><span class="p">(</span><span class="s2">&quot;::text&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">())</span>
+        <span class="k">return</span> <span class="s2">&quot;extra&quot;</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</pre></div>
+
+
+<p>Nas primeiras linhas do script estamos dizendo ao Python o que vamos utilizar. Por hora, vamos ignora-las e focar no spider. A brincadeira começa a ficar séria a partir da linha <code>class ScFlorianopolisSpider(BaseGazetteSpider)</code>. Não quero entrar em muito detalhes de programação, mas podemos dizer que uma <code>class</code> (ou classe em português), neste caso, é uma representação de de como iremos navegar e baixar os dados das páginas de internet. As linhas seguintes são:</p>
+<div class="highlight"><pre><span></span>    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;sc_florianopolis&quot;</span>
+    <span class="n">URL</span> <span class="o">=</span> <span class="s2">&quot;http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial&quot;</span>
+    <span class="n">TERRITORY_ID</span> <span class="o">=</span> <span class="s2">&quot;4205407&quot;</span>
+    <span class="n">AVAILABLE_FROM</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># actually from June/2009</span>
+</pre></div>
+
+
+<p>O atributo <code>name</code> diz qual é o nome do spider. Lembra quando rodamos o spider a primeira vez? Então, nós passamos o nome do spider que queríamos rodar. É baseado nesse nome que o scrapy encontra e executa o spider.</p>
+<p><code>URL</code> é um atributo que guarda a primeira página que será visita quando quisermos pegar os dados de Floripa. Veremos como essa informação é utilizada daqui a pouco. <code>TERRITORY_ID</code> é o código do IBGE da cidade que esse spider está extraindo os dados. <code>AVAILABLE_FROM</code> é algo especifico desse spider. A data colocada nesse atributo diz ao robozinho desde qual data ele deve procurar os arquivos do diário oficial. Uma informação importante, <code>URL</code>, <code>AVAILABLE_FROM</code> e <code>TERRITORY_ID</code> não são campos utilizados pelo scrapy. Eles são usados no código escrito pelas pessoas que criaram esse spider.</p>
+<div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">start_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+        <span class="k">while</span> <span class="n">target</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">AVAILABLE_FROM</span><span class="p">:</span>
+            <span class="n">year</span><span class="p">,</span> <span class="n">month</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">year</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">month</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ano</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">mes</span><span class="o">=</span><span class="n">month</span><span class="p">,</span> <span class="n">passo</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="n">enviar</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">FormRequest</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">URL</span><span class="p">,</span> <span class="n">formdata</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">)</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">target</span> <span class="o">+</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+
+<p>O scrapy espera que o as classes definidas possuam alguns métodos para que possa funcionar corretamente. Quando um spider vai ser executado, o scrapy chama o método <code>start_requests</code> para saber qual é a primeira página que ele deve baixar. Note que o método <code>start_requets</code> retorna um objeto <code>FormRequest</code>. Nesse caso, ele representa uma request que deve ser feita.  O scrapy permite que você retorne outros valores nesse método. Mas por motivos de simplicidade, vamos deixar isso para outra hora. O que for baixado da request retornada pelo <code>start_requests</code> é processado e passado para o método <code>parse</code>:</p>
+<div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">css</span><span class="p">(</span><span class="s2">&quot;ul.listagem li a&quot;</span><span class="p">):</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pdf_url</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">yield</span> <span class="n">Gazette</span><span class="p">(</span>
+                <span class="n">date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_date</span><span class="p">(</span><span class="n">link</span><span class="p">),</span>
+                <span class="n">file_urls</span><span class="o">=</span><span class="p">(</span><span class="n">url</span><span class="p">,),</span>
+                <span class="n">is_extra_edition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_extra</span><span class="p">(</span><span class="n">link</span><span class="p">),</span>
+                <span class="n">territory_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">TERRITORY_ID</span><span class="p">,</span>
+                <span class="n">power</span><span class="o">=</span><span class="s2">&quot;executive_legislature&quot;</span><span class="p">,</span>
+                <span class="n">scraped_at</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+            <span class="p">)</span>
+</pre></div>
+
+
+<p>Note que o método <code>parse</code> recebe como parametro um objeto. Esse objeto, que neste caso é chamado de <code>response</code>, é o que contem o que foi baixado pelo scrapy daquela URL que você retornou anteriormente no método <code>start_requets</code>. É aqui que a mágica acontece. É nesse método que você define como nosso robô vai achar os arquivos do diário oficial. Vamos destrinchar o que está acontecendo aqui. Logo no início do método é chamado uma função chamada <code>css</code>. CSS é uma forma que podemos utilizar para encontrar elementos na página. Nesse exemplo, estamos procurando listas não numeradas, que tenham a classe (classe do CSS, não é a mesma classe do python) <code>listagem</code> e pegando os links que existem nos itens dessa lista. Sei que é um pouco complicado de entender no primeiro momento. Mas logo a seguir teremos uma sessão só para explicar isso. ;)</p>
+<p>Uma vez com os link disponíveis da lista, para cada um deles chamamos o método <code>get_pdf_url</code> que irá extrair os link dos arquivos do diário oficial. Uma vez com o link, nós retornamos um objeto <code>Gazette</code>. Um objeto nada mais é do que uma instanciação em memória de uma classe. Lembra da classe que vimos que ensina o nosso robô a encontrar os arquivos, a <code>ScFlorianopolisSpider</code>? Então, o scrapy instância essa classe e chamar seus métodos. Não se preocupe se não compreendeu isso com 100%. Você vai aprendendo conforme for programando. </p>
+<p>Voltando ao <code>Gazette</code>... da mesma forma que o <code>ScFlorianopolisSpider</code> é uma classe que representa a "inteligência" de como o nosso robô sabe baixar os arquivos do diário oficial de Floripa. O <code>Gazette</code> representa um arquivo do diário oficial encontrado. Essa classe possuir alguns atributos que servem para identificar o arquivo. Como a <code>date</code> que é a data do diário oficial, <code>file_urls</code> contem o link para os arquivos do diário, <code>territory_id</code> é o identificador do município no IBGE, <code>power</code> diz que qual poder é o documento. O <code>scraped_at</code> mostra qual é a data que o arquivo foi baixado.</p>
+<p>Não sei se  você notou que existem mais métodos não citados até agora. São métodos que foram criados para serem utilizados nos métodos citados. Dê uma olhada nele e veja se consegue entender o que eles fazem. Se estiver com dúvidas, não deixe de perguntar nos canais de comunicação dos embaixadores ou me pergunte pelas redes sociais que você pode encontrar aqui no meu blog. </p>
+<p>Continuando... conseguimos baixar a página do diário oficial e encontrar os arquivos. Mas a primeira página do diário não tem todos os arquivos. Precisamos continuar navegando pelas páginas para baixar os que faltam. Temos duas opções:</p>
+<h4>Retorna um objeto request na função <code>parse</code>.</h4>
+<p>Quando o Scrapy chama o método <code>parse</code>, ele espera de retorno um objeto de que representa uma requisição a um site, o mesmo tipo de objeto retornado pelo <code>start_requests</code>, ou um item (como o <code>Gazette</code>), ou ainda uma lista/iterável de ambos. Isso significa que se retornarmos um objeto que represente uma requisição, o scrapy irá baixar a página e chamar a função <code>parse</code> novamente. Se retomarmos um item (<code>Gazette</code>) o scrapy assume que achamos o que estávamos procurando e passa esse item para o próximo passo na nossa linha de execução. Que nesse caso, é transformar os arquivos em texto e gravar as informações em um banco de dados.</p>
+<p>Quando o método <code>parse</code> retornar nada, significa que já achamos tudo o que queremos e nosso robô pode parar e recarregar as baterias.</p>
+<h4>Retornar uma lista ou iterável no <code>start_requets</code></h4>
+<p>Dê uma olhada no <code>start_requets</code> novamente. Note que é usado a palavra reservada <code>yield</code> ao invés de <code>return</code>.  Isso significa que o método é uma função geradora. Isso significa que a partir da segunda chamada ao <code>start_request</code> a execução irá continuar a partir de onde o <code>yield</code> anterior foi chamado. Ou seja, enquanto o <code>start_request</code> não retorna <code>None</code> ou uma lista finita de itens, o scrapy continuará baixando as páginas das URL retornadas pela função <code>start_requests</code>. Entenda mais sobre isso no  <a href="https://www.youtube.com/watch?v=Gre1yR5yH7U">video</a> do Python para Zumbies</p>
+<p>Alias! Perceba que a função <code>parse</code> também é uma função geradora. ;)</p>
+<p>PS: No momento dessa escrita, o spider do Floripa tem um bug. O spider nunca termina. Justamente porque a <code>start_request</code> nunca termina. Nunca retorna <code>None</code> ou uma lista finita. </p>
+<h4>Pipeline</h4>
+<p>Vamos voltar ao que acontece depois que retornamos um item, um arquivo do diário oficial. Uma vez que encontramos algo que estávamos procurando o scrapy passa esse item por uma série de procedimentos definidos em um arquivos de configuração. No scrapy, essa séria de procedimentos é chamada de <code>pipeline</code>. Todos os procedimentos executados nesse pipeline estão definidos no arquivo <code>processing/data_collection/gazette/pipelines.py</code>. Lá você vai ver o <code>PostgreSQLPipeline</code> que é a etapa que grava aquelas informações que você definiu la no objeto <code>Gazette</code> retornado pela função <code>parse</code> no banco de dados. Existe o <code>GazetteDateFilteringPipeline</code> que ignora os arquivos do diário oficial anteriores a uma data determinada no spider. Vai ver também o <code>PdfParsingPipeline</code> que é o passo que extrai o texto dos arquivos de PDF.</p>
+<p>Se tudo isso funcionar como o esperado. No final você terá diversos arquivos na pasta <code>data/full</code>.  :-)</p>
+<h3>HTML, CSS e XPATH</h3>
+<h4>HTML</h4>
+<p>HTML é como são definidas as página web. Por exemplo, esse é uma página web muito simples que você pode salvar em uma arquivo HTML local e abrir em seu navegador:</p>
+<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span> Esse é o título da nossa página! <span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+     <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+         Esse é corpo da página.
+         <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://www.google.com&quot;</span><span class="p">&gt;</span>LInk para o google<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+     <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</pre></div>
+
+
+<p>É isso com esse tipo de dados que iremos trabalhar dentro do spiders para achar e detectar os arquivos que estamos procurando. </p>
+<h4>CSS</h4>
+<p>Anteriormente comentei que CSS poderia ser utilizado para encontrar os arquivos dos diários oficiais que estamos procurando. Isso não é totalmente correto. <a href="https://developer.mozilla.org/pt-BR/docs/Web/CSS">CSS</a> é muito mais que isso. De uma forma beeeeem resumida, CSS é o que deixa as páginas da rede mundial de computadores bonitas! ;-)</p>
+<p>O que nós usamos estamos utilizando são os seletores CSS. Os seletores são utilizados para identificar os elementos da página que queremos modificar. Por exemplo, podemos utilizar seletores para dizer que todas as listas da minha página terão fundo preto e letras verdes. No nosso caso, não utilizamos os seletores para modificar o visual, mas sim, para achar os elementos que nos interessam. Você pode brincar com isso agora mesmo no seu navegador. Vou utilizar o mesmo seletor e página que estamos estudando até agora.</p>
+<p>No seu navegador acesse esse link: http://www.pmf.sc.gov.br/governo/index.php?pagina=govdiariooficial.</p>
+<p>Se a página não mudou desde quando escrevi esse artigo você deverá estar vendo algo parecido com isso:</p>
+<p><img alt="" src="/images/diario_pagina.png"></p>
+<p>Legal, agora vamos brincar com os seletores. Vou utilizar o Firefox, mas o procedimento é muito parecido em outros navegadores. Clique com o botão direito na página e clique na opção "Inspecionar elemento". Agora você deverá estar vendo algo parecido com isso, note que você pode ver o HTML da página:</p>
+<p><img alt="" src="/images/diario_html.png"></p>
+<p>Nesssa tela podemos ver o HTML da página (seta 2), podemos testar o nosso seletor CSS (seta 1) e ver o que ele encontrou (seta 3).</p>
+<p>Olha só que legal, encontramos 17 items (seta 4). Note que são exatamente os link para os arquivos que estamos procurando! São esses mesmos itens que são processados na função <code>parse</code>.</p>
+<h4>XPATH</h4>
+<p>Seletores CSS não são a única forma de você achar os elementos nas páginas. Você pode encontrar utilizando XPATH. Não vou entrar no XPATH nesse momento. Acho que o artigo já tem bastante coisa para todo mundo interessado brincar por um bom tempo. Além do que, os seletores CSS já podem resolver muitos, senão a maioria, dos casos. Mas para quem ficou interessado tem os seguintes links de documentação: </p>
+	<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_shortname = 'jvanz';
+			(function() {
+	 			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	 			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	 			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	 		})();
+		</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</div>
+		</div>
+	</body>
+</html>

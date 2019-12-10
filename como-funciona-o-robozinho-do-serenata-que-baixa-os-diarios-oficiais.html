@@ -341,7 +341,8 @@ Agora dê uma olhada nos arquivos baixados em <code>data/full</code>:</p>
 <p><a href="https://github.com/pythonbnu/workshop-python-iniciante">Tutorial realizado pelo Grupy Blumenau</a></p>
 <h3>Scrapy</h3>
 <p>Scrapy é a biblioteca que utilizamos para acessar, navegar e encontrar os que queremos nas páginas dos diários oficiais. Podemos dizer que é o coração do nosso robô. Essa lib faz o trabalho sujo que baixar e deixar disponíveis de maneira mais fácil os dados das páginas que estamos vasculhando.</p>
-<p>Vamos dar uma olhada como é definido o nosso robô e  a maneira de navegar pelas páginas web. Para exemplificar, vou utilizar a cidade de Florianópolis:</p>
+<p>Vamos dar uma olhada como é definido o nosso robô e  a maneira de navegar pelas páginas web.  Ah! Só para deixar claro, "spider" é o nome dados no scrapy para código que irá acessar e baixar os dados do site do diário oficial.
+Para exemplificar, vou utilizar a cidade de Florianópolis:</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
 
@@ -415,7 +416,7 @@ Agora dê uma olhada nos arquivos baixados em <code>data/full</code>:</p>
 </pre></div>
 
 
-<p>O atributo <code>name</code> diz qual é o nome do spider. Lembra quando rodamos o spider a primeira vez? Então, nós passamos o nome do spider que queríamos rodar. É baseado nesse nome que o scrapy encontra e executa o spider.</p>
+<p>O atributo <code>name</code> diz qual é o nome do spider. Lembra quando rodamos o spider a primeira vez? Então, nós passamos o nome do spider que queríamos rodar. É baseado nesse nome que o scrapy encontra e executa o spider. </p>
 <p><code>URL</code> é um atributo que guarda a primeira página que será visitada quando quisermos pegar os dados de Floripa. Veremos como essa informação é utilizada daqui a pouco. <code>TERRITORY_ID</code> é o código do IBGE da cidade que esse spider está extraindo os dados. <code>AVAILABLE_FROM</code> é algo especifico desse spider. A data colocada nesse atributo diz ao robozinho desde qual data ele deve procurar os arquivos do diário oficial. Uma informação importante, <code>URL</code>, <code>AVAILABLE_FROM</code> e <code>TERRITORY_ID</code> não são campos utilizados pelo scrapy. Eles são usados no código escrito pelas pessoas que criaram esse spider.</p>
 <div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">start_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">target</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
@@ -459,7 +460,7 @@ Agora dê uma olhada nos arquivos baixados em <code>data/full</code>:</p>
 <p>Alias! Perceba que a função <code>parse</code> também é uma função geradora. ;)</p>
 <p>PS: No momento dessa escrita, o spider do Floripa tem um bug. O spider nunca termina. </p>
 <h4>Pipeline</h4>
-<p>Vamos voltar ao que acontece depois que retornamos um item, um arquivo do diário oficial. Uma vez que encontramos algo que estávamos procurando o scrapy passa esse item por uma série de procedimentos definidos em um arquivo de configuração. No scrapy, essa séria de procedimentos é chamada de <a href="https://doc.scrapy.org/en/latest/topics/item-pipeline.html">pipeline</a>. Todos os procedimentos executados nesse <code>pipeline</code> estão definidos no arquivo <code>processing/data_collection/gazette/pipelines.py</code>. Lá você vai ver o <code>PostgreSQLPipeline</code> que é a etapa que grava aquelas informações que você definiu la no objeto <code>Gazette</code> retornado pela função <code>parse</code> no banco de dados. Existe o <code>GazetteDateFilteringPipeline</code> que ignora os arquivos do diário oficial anteriores a uma data determinada no spider. Vai ver também o <code>PdfParsingPipeline</code> é o passo que extrai o texto dos arquivos de PDF.</p>
+<p>Vamos voltar ao que acontece depois que retornamos um item, um arquivo do diário oficial. Uma vez que encontramos algo que estávamos procurando o scrapy passa esse item por uma série de procedimentos definidos em um arquivo de configuração. No scrapy, essa séria de procedimentos é chamada de <a href="https://doc.scrapy.org/en/latest/topics/item-pipeline.html">pipeline</a>. Todos os procedimentos executados nesse <code>pipeline</code> estão definidos no arquivo <code>processing/data_collection/gazette/pipelines.py</code>. Lá você vai ver o <code>PostgreSQLPipeline</code> que é a etapa que grava aquelas informações que você definiu la no objeto <code>Gazette</code> retornado pela função <code>parse</code> no banco de dados. Existe o <code>GazetteDateFilteringPipeline</code> que ignora os arquivos do diário oficial anteriores a uma data determinada no spider. Vai ver também o <code>ExtractTextPipeline</code> é o passo que extrai o texto dos arquivos de PDF, doc e texto.</p>
 <p>Se tudo isso funcionar como o esperado. No final você terá diversos arquivos na pasta <code>data/full</code>.  :-)</p>
 <h3>HTML, CSS e XPATH</h3>
 <h4>HTML</h4>

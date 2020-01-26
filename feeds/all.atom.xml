@@ -1,5 +1,190 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2019-11-28T00:00:00-03:00</updated><entry><title>Como funciona o robozinho do Serenata que baixa os diários oficiais?</title><link href="/como-funciona-o-robozinho-do-serenata-que-baixa-os-diarios-oficiais.html" rel="alternate"></link><published>2019-11-28T00:00:00-03:00</published><updated>2019-11-28T00:00:00-03:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:None,2019-11-28:/como-funciona-o-robozinho-do-serenata-que-baixa-os-diarios-oficiais.html</id><summary type="html">&lt;p&gt;Recentemente comecei a fazer parte do programa de &lt;a href="https://embaixadoras.ok.org.br/"&gt;embaixadores&lt;/a&gt; da Open Knowledge Brasil (OKBR). Como minha primeira contribuição, comecei adicionar novos spiders no &lt;a href="https://github.com/okfn-brasil/diario-oficial"&gt;diario-oficial&lt;/a&gt;. Esse repositório possui diversos spiders para a raspagem de dados dos diários oficiais de cada município brasileiro. Como sou de Santa Catarina, decidi inicial
+<feed xmlns="http://www.w3.org/2005/Atom"><title>vanz</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2020-01-26T00:00:00-03:00</updated><entry><title>How can we climb a tree structure?</title><link href="/how-can-we-climb-a-tree-structure.html" rel="alternate"></link><published>2020-01-26T00:00:00-03:00</published><updated>2020-01-26T00:00:00-03:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:None,2020-01-26:/how-can-we-climb-a-tree-structure.html</id><summary type="html">&lt;p&gt;These days I was writing a solution for a challenge in the &lt;a href="https://www.hackerrank.com/"&gt;HackerRank&lt;/a&gt; and I
+ended up writing a algorithm to walk through a tree structure. Nothing too special
+but I decided to white an article about the algorithms we can use.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://media.giphy.com/media/PfSuiwg3WO9K8/giphy.gif"&gt;&lt;/p&gt;
+&lt;p&gt;There are many types of tree out there …&lt;/p&gt;</summary><content type="html">&lt;p&gt;These days I was writing a solution for a challenge in the &lt;a href="https://www.hackerrank.com/"&gt;HackerRank&lt;/a&gt; and I
+ended up writing a algorithm to walk through a tree structure. Nothing too special
+but I decided to white an article about the algorithms we can use.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://media.giphy.com/media/PfSuiwg3WO9K8/giphy.gif"&gt;&lt;/p&gt;
+&lt;p&gt;There are many types of tree out there. But to keep the simplicity, will not 
+cover some aspects like balanced trees, add node, remove a node, delete a 
+section of the tree, among other things. Let's focus how to walk through trees. 
+In this article we will use the following tree structure in our examples:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/tree.png"&gt;&lt;/p&gt;
+&lt;h3&gt;What's a tree?&lt;/h3&gt;
+&lt;p&gt;Before see how to climb a tree, we need to define what is a tree in the first 
+place.  We can say that a tree is kind of a graph. But we will not cover graphs 
+in depth here. So, let's not been so pedantic and use a more simple definition. 
+We can say that a tree is compose of bunch of nodes connected with a parent/children 
+relationship. What's a node? Well, a node is a data structure with a value, and 
+a list of children nodes.&lt;/p&gt;
+&lt;p&gt;A node in a tree may have none, one, two or many children nodes. In this article 
+we will focus on binary tree. Which means that the nodes in our tree will have 
+2 children nodes at most. As you can see in the tree shown before, no node has 
+more than 2 children. &lt;/p&gt;
+&lt;p&gt;In our example, the value of each node is a integer. But it can be anything, 
+even another tree. This will vary depending of application. In our tree the node 
+&lt;code&gt;33&lt;/code&gt; is the root node. The root node is the node which has no parent, it's the 
+topmost node. All the algorithms show in the article start in the root node. 
+The nodes &lt;code&gt;5&lt;/code&gt;, &lt;code&gt;18&lt;/code&gt;, &lt;code&gt;36&lt;/code&gt;, &lt;code&gt;39&lt;/code&gt; and &lt;code&gt;49&lt;/code&gt; are the leaf nodes.  Leaf nodes has not children. &lt;/p&gt;
+&lt;h3&gt;Algorithms&lt;/h3&gt;
+&lt;p&gt;The following section describe the 3 main ways you can visit the nodes in a tree. 
+You will see a gif showing the order in each node is visited. Black nodes mean 
+that it has been visited. The main algorithms covered is &lt;code&gt;preorder&lt;/code&gt;, &lt;code&gt;inorder&lt;/code&gt; and &lt;code&gt;posorder&lt;/code&gt;.
+Their names came from the relative root position with respect to its sub trees. Thus,
+&lt;code&gt;preorder&lt;/code&gt; root node come first. &lt;code&gt;posorder&lt;/code&gt; the root node is the last to be visited.
+&lt;code&gt;inorder&lt;/code&gt;the root node is visited between its left and right sub trees.&lt;/p&gt;
+&lt;p&gt;The 3 following algorithms visit each node once. Thus, their running time is &lt;code&gt;O(n)&lt;/code&gt;&lt;/p&gt;
+&lt;h4&gt;Preorder traversal&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="" src="/images/preorder.gif"&gt;&lt;/p&gt;
+&lt;p&gt;Ok, let's start with the pre order traversal. In this algorithm, as the name
+suggests, we visit the tree nodes in the following order: root, left, right. 
+When we walk though a tree using the pre order traversal we fist visit the 
+root node, the current node which we are sitting on. Then, we visit the node 
+in the left and by consequence the whole sub tree. After that, we do the same 
+with the right node and its sub tree. Considering our tree, the nodes would be 
+visited in the following order: &lt;code&gt;33 15 10 5 20 18 47 38 36 39 51 49&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;A possible recursive pseudocode this algorithms is:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;// preorder the root come before its subtrees
+def preorder-traversal(root):
+    if root == null:
+        return
+    visit(root)
+    preorder-traversal(root.left)
+    preorder-traversal(root.right)
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h4&gt;Posorder traversal&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="" src="/images/posorder.gif"&gt;&lt;/p&gt;
+&lt;p&gt;When we walk though a tree using the pos order traversal we fist visit the
+left, the right node and their sub tree and then the root node. If we run this 
+algorithm using our tree as the input, the visit would be:
+&lt;code&gt;5 10 18 20 15 36 39 38 49 51 47 33&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;A possible recursive pseudocode this algorithms is:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;// posorder the root come after its subtrees
+def posorder-traversal(root):
+    if root == null:
+        return
+
+    posorder-traversal(root.left)
+    posorder-traversal(root.right)
+    visit(root)
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h4&gt;Inorder traversal&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="" src="/images/inorder.gif"&gt;&lt;/p&gt;
+&lt;p&gt;When we walk though a tree using the in order traversal we fist visit the
+left, the root and then right node and its sub tree. If we run this 
+algorithm using our tree as the input, the visit would be:
+&lt;code&gt;5 10 15 18 20 33 36 38 39 47 49 51&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;A possible recursive pseudocode this algorithms is:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;// inorder the root come between its subtrees
+def inorder-traversal(root):
+    if root == null:
+        return
+
+    inorder-traversal(root.left)
+    visit(root)
+    inorder-traversal(root.right)
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;Level order traversal&lt;/h3&gt;
+&lt;p&gt;&lt;img alt="" src="/images/level-order.gif"&gt;&lt;/p&gt;
+&lt;p&gt;Different from the previous traversals this algorithm does not walk though the
+tree following the children nodes. It walk though the tree by level. This means that
+all the node in the same level as visit before move to the next level in the tree.
+Still using our tree as input example, this is the output: &lt;code&gt;33 15 47 10 20 38 51 5 18 36 39 49&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;I would say we can consider that level order traversal a variation of the preorder
+algorithm. The difference here is that we will use an auxiliary queue to visit 
+the node. But it will continue visiting the nodes in the preorder. Take a look
+in the pseudocode here:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;def level-order(root):
+    queue q;
+    q.push(root)
+    while (q is not empty):
+        visit(q.top)
+        q.push(q.top.left)
+        q.push(q.top.right)
+        q.pop()
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Just a quick note. Remember, a tree is a graph. Thus, we can consider the level 
+order traversal as a &lt;a href="https://en.wikipedia.org/wiki/Breadth-first_search"&gt;breadth first search&lt;/a&gt;. 
+The previous algorithms (&lt;code&gt;preorder&lt;/code&gt;, &lt;code&gt;posorder&lt;/code&gt; and &lt;code&gt;inorder&lt;/code&gt;) are &lt;a href="https://en.wikipedia.org/wiki/Depth-first_search"&gt;depth first 
+search&lt;/a&gt;. Because they go as 
+depth as possible first. ;-)&lt;/p&gt;
+&lt;h3&gt;Vertical order traversal&lt;/h3&gt;
+&lt;p&gt;The vertical order traversal, differently from the previous traversals and as 
+the name suggests, walk through our tree in a vertical order. This means that, 
+instead of visiting all the left, root or right node first, it visit all the nodes in 
+the same horizontal distance from the root. &lt;/p&gt;
+&lt;h4&gt;Horizontal distance&lt;/h4&gt;
+&lt;p&gt;The horizontal distance (HD) of a node in the tree is the distance from the root
+node following this rules:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The HD of the root node is 0;&lt;/li&gt;
+&lt;li&gt;When move to a node in the left, subtract one (-1) from the distance;&lt;/li&gt;
+&lt;li&gt;When move to a node in the right, add one (+1) from the distance;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Let's take a look in the HD for each node from the previous tree:
+&lt;img alt="" src="/images/horizontal_distance_values_tree.png"&gt;&lt;/p&gt;
+&lt;p&gt;Coming back to our example tree and considering that we are using a 
+&lt;code&gt;preorder&lt;/code&gt; algorithm. This means that our tree will be visit in the following order:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;5       // HD -3
+10      // HD -2
+15 18 36    // HD -1
+33 20 38    // HD 0
+47 39 49    // HD 1
+51      // HD 2
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;If we give different colors for each HD, we can visualize the tree as the fillowing:
+&lt;img alt="" src="/images/tree-hd-colors.png"&gt;&lt;/p&gt;
+&lt;p&gt;Again, a pseudocode can be:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;// function to find the horizontal distances of each nodes
+def get-vertical-distances(distances, root, distance):
+    if root is nil
+        return
+    // add the node in the node list for its HD
+    distances[distance].append(root) 
+    // recursive call in the left sub tree
+    get-vertical-distances(distances, root.left, distances-1) 
+    // recursive call in the right sub tree
+    get-vertical-distances(distances, root.right, distances+1) 
+
+
+// vertical order traveral
+def vertical-order(root):
+    // map to store the node with the same HD
+    map&amp;lt;hd, list&amp;lt;nodes&amp;gt;&amp;gt; distances
+    // find the nodes HD and populate the map
+    get-vertical-distances(distances, root, 0)
+    // visit the node by their distance
+    for each distance in distances:
+        for each node in distance:
+            visit(node)
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h5&gt;That's all for now!&lt;/h5&gt;
+&lt;p&gt;As always if you saw something wrong or know how to improve the article. Please,
+let me know. Thanks!&lt;/p&gt;
+&lt;h5&gt;References&lt;/h5&gt;
+&lt;p&gt;I have some simple implementation of this algorithms in my sandbox &lt;a href="https://github.com/jvanz/algorithms"&gt;repository&lt;/a&gt;.
+If you're interested in C++ and a real implementation of these algorithms, 
+you are welcome to check it out. It's not something to be used in production, 
+but you can take a look and show me if I'm doing something wrong! :)&lt;/p&gt;
+&lt;p&gt;I've used Latex to create the trees for this article: &lt;a href="http://www.texample.net/tikz/examples/red-black-tree/"&gt;Example: Red-black tree&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;If you interested in more depth material. These books can be useful:&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://www.amazon.com/Art-Computer-Programming-Vol-Fundamental/dp/0201896834/ref=sr_1_5?keywords=knuth&amp;amp;qid=1580064084&amp;amp;sr=8-5"&gt;The Art of Computer Programming, Vol. 1: Fundamental Algorithms, 3rd Edition&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://www.amazon.com/Introduction-Algorithms-3rd-MIT-Press/dp/0262033844/ref=sr_1_1?crid=2GQPUFV6PCZJ5&amp;amp;keywords=algorithms+cormen&amp;amp;qid=1580065268&amp;amp;sprefix=algori%2Caps%2C332&amp;amp;sr=8-1"&gt;Introduction to Algorithms, 3rd Edition&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://www.amazon.com/Algorithms-Illuminated-Part-1-Basics/dp/0999282905/ref=sr_1_2?crid=21RDTL7FTNOI7&amp;amp;keywords=algorithms+illuminated&amp;amp;qid=1580065761&amp;amp;sprefix=algorithms+%2Caps%2C317&amp;amp;sr=8-2"&gt;Algorithms Illuminated: Part 1: The Basics&lt;/a&gt;&lt;/p&gt;</content><category term="misc"></category><category term="tree"></category><category term="data-structure"></category><category term="algorithms"></category></entry><entry><title>Como funciona o robozinho do Serenata que baixa os diários oficiais?</title><link href="/como-funciona-o-robozinho-do-serenata-que-baixa-os-diarios-oficiais.html" rel="alternate"></link><published>2019-11-28T00:00:00-03:00</published><updated>2019-12-10T20:00:00-03:00</updated><author><name>José Guilherme Vanz</name></author><id>tag:None,2019-11-28:/como-funciona-o-robozinho-do-serenata-que-baixa-os-diarios-oficiais.html</id><summary type="html">&lt;p&gt;Recentemente comecei a fazer parte do programa de &lt;a href="https://embaixadoras.ok.org.br/"&gt;embaixadores&lt;/a&gt; da Open Knowledge Brasil (OKBR). Como minha primeira contribuição, comecei adicionar novos spiders no &lt;a href="https://github.com/okfn-brasil/diario-oficial"&gt;diario-oficial&lt;/a&gt;. Esse repositório possui diversos spiders para a raspagem de dados dos diários oficiais de cada município brasileiro. Como sou de Santa Catarina, decidi inicial
 com as …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Recentemente comecei a fazer parte do programa de &lt;a href="https://embaixadoras.ok.org.br/"&gt;embaixadores&lt;/a&gt; da Open Knowledge Brasil (OKBR). Como minha primeira contribuição, comecei adicionar novos spiders no &lt;a href="https://github.com/okfn-brasil/diario-oficial"&gt;diario-oficial&lt;/a&gt;. Esse repositório possui diversos spiders para a raspagem de dados dos diários oficiais de cada município brasileiro. Como sou de Santa Catarina, decidi inicial
 com as cidades do meu Estado. Felizmente, no tempo de escrita deste artigo, minha primeira &lt;a href="https://github.com/okfn-brasil/diario-oficial/pull/135"&gt;pull request&lt;/a&gt; está aguardando aprovação! :)&lt;/p&gt;
 &lt;p&gt;Durante esse meio tempo, outros embaixadores demonstraram interesse em adicionar ou modificar os spiders para suas cidades. Ai que entra esse artigo... eu pretendo explicar na forma mais didática que eu conseguir, tudo o que é necessário para começar a entender como adicionar ou alterar um spider. Para isso, irei explicar como funciona cada parte necessária para isso. Incluindo como baixar o código, como rodar um spider, um pouco de python, &lt;a href="https://scrapy.org/"&gt;Scrapy&lt;/a&gt;, &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTML"&gt;HTML&lt;/a&gt;, entre outros.
@@ -273,7 +458,8 @@ Agora dê uma olhada nos arquivos baixados em &lt;code&gt;data/full&lt;/code&gt;
 &lt;p&gt;&lt;a href="https://github.com/pythonbnu/workshop-python-iniciante"&gt;Tutorial realizado pelo Grupy Blumenau&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;Scrapy&lt;/h3&gt;
 &lt;p&gt;Scrapy é a biblioteca que utilizamos para acessar, navegar e encontrar os que queremos nas páginas dos diários oficiais. Podemos dizer que é o coração do nosso robô. Essa lib faz o trabalho sujo que baixar e deixar disponíveis de maneira mais fácil os dados das páginas que estamos vasculhando.&lt;/p&gt;
-&lt;p&gt;Vamos dar uma olhada como é definido o nosso robô e  a maneira de navegar pelas páginas web. Para exemplificar, vou utilizar a cidade de Florianópolis:&lt;/p&gt;
+&lt;p&gt;Vamos dar uma olhada como é definido o nosso robô e  a maneira de navegar pelas páginas web.  Ah! Só para deixar claro, "spider" é o nome dados no scrapy para código que irá acessar e baixar os dados do site do diário oficial.
+Para exemplificar, vou utilizar a cidade de Florianópolis:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;re&lt;/span&gt;
 &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;datetime&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;date&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;datetime&lt;/span&gt;
 
@@ -347,7 +533,7 @@ Agora dê uma olhada nos arquivos baixados em &lt;code&gt;data/full&lt;/code&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;O atributo &lt;code&gt;name&lt;/code&gt; diz qual é o nome do spider. Lembra quando rodamos o spider a primeira vez? Então, nós passamos o nome do spider que queríamos rodar. É baseado nesse nome que o scrapy encontra e executa o spider.&lt;/p&gt;
+&lt;p&gt;O atributo &lt;code&gt;name&lt;/code&gt; diz qual é o nome do spider. Lembra quando rodamos o spider a primeira vez? Então, nós passamos o nome do spider que queríamos rodar. É baseado nesse nome que o scrapy encontra e executa o spider. &lt;/p&gt;
 &lt;p&gt;&lt;code&gt;URL&lt;/code&gt; é um atributo que guarda a primeira página que será visitada quando quisermos pegar os dados de Floripa. Veremos como essa informação é utilizada daqui a pouco. &lt;code&gt;TERRITORY_ID&lt;/code&gt; é o código do IBGE da cidade que esse spider está extraindo os dados. &lt;code&gt;AVAILABLE_FROM&lt;/code&gt; é algo especifico desse spider. A data colocada nesse atributo diz ao robozinho desde qual data ele deve procurar os arquivos do diário oficial. Uma informação importante, &lt;code&gt;URL&lt;/code&gt;, &lt;code&gt;AVAILABLE_FROM&lt;/code&gt; e &lt;code&gt;TERRITORY_ID&lt;/code&gt; não são campos utilizados pelo scrapy. Eles são usados no código escrito pelas pessoas que criaram esse spider.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;start_requests&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
         &lt;span class="n"&gt;target&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;date&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;today&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
@@ -391,7 +577,7 @@ Agora dê uma olhada nos arquivos baixados em &lt;code&gt;data/full&lt;/code&gt;
 &lt;p&gt;Alias! Perceba que a função &lt;code&gt;parse&lt;/code&gt; também é uma função geradora. ;)&lt;/p&gt;
 &lt;p&gt;PS: No momento dessa escrita, o spider do Floripa tem um bug. O spider nunca termina. &lt;/p&gt;
 &lt;h4&gt;Pipeline&lt;/h4&gt;
-&lt;p&gt;Vamos voltar ao que acontece depois que retornamos um item, um arquivo do diário oficial. Uma vez que encontramos algo que estávamos procurando o scrapy passa esse item por uma série de procedimentos definidos em um arquivo de configuração. No scrapy, essa séria de procedimentos é chamada de &lt;a href="https://doc.scrapy.org/en/latest/topics/item-pipeline.html"&gt;pipeline&lt;/a&gt;. Todos os procedimentos executados nesse &lt;code&gt;pipeline&lt;/code&gt; estão definidos no arquivo &lt;code&gt;processing/data_collection/gazette/pipelines.py&lt;/code&gt;. Lá você vai ver o &lt;code&gt;PostgreSQLPipeline&lt;/code&gt; que é a etapa que grava aquelas informações que você definiu la no objeto &lt;code&gt;Gazette&lt;/code&gt; retornado pela função &lt;code&gt;parse&lt;/code&gt; no banco de dados. Existe o &lt;code&gt;GazetteDateFilteringPipeline&lt;/code&gt; que ignora os arquivos do diário oficial anteriores a uma data determinada no spider. Vai ver também o &lt;code&gt;PdfParsingPipeline&lt;/code&gt; é o passo que extrai o texto dos arquivos de PDF.&lt;/p&gt;
+&lt;p&gt;Vamos voltar ao que acontece depois que retornamos um item, um arquivo do diário oficial. Uma vez que encontramos algo que estávamos procurando o scrapy passa esse item por uma série de procedimentos definidos em um arquivo de configuração. No scrapy, essa séria de procedimentos é chamada de &lt;a href="https://doc.scrapy.org/en/latest/topics/item-pipeline.html"&gt;pipeline&lt;/a&gt;. Todos os procedimentos executados nesse &lt;code&gt;pipeline&lt;/code&gt; estão definidos no arquivo &lt;code&gt;processing/data_collection/gazette/pipelines.py&lt;/code&gt;. Lá você vai ver o &lt;code&gt;PostgreSQLPipeline&lt;/code&gt; que é a etapa que grava aquelas informações que você definiu la no objeto &lt;code&gt;Gazette&lt;/code&gt; retornado pela função &lt;code&gt;parse&lt;/code&gt; no banco de dados. Existe o &lt;code&gt;GazetteDateFilteringPipeline&lt;/code&gt; que ignora os arquivos do diário oficial anteriores a uma data determinada no spider. Vai ver também o &lt;code&gt;ExtractTextPipeline&lt;/code&gt; é o passo que extrai o texto dos arquivos de PDF, doc e texto.&lt;/p&gt;
 &lt;p&gt;Se tudo isso funcionar como o esperado. No final você terá diversos arquivos na pasta &lt;code&gt;data/full&lt;/code&gt;.  :-)&lt;/p&gt;
 &lt;h3&gt;HTML, CSS e XPATH&lt;/h3&gt;
 &lt;h4&gt;HTML&lt;/h4&gt;

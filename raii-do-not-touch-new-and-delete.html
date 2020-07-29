@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<link href="http://gmpg.org/xfn/11" rel="profile">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+		<!-- Enable responsiveness on mobile devices-->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+		<title>vanz</title>
+
+		<!-- CSS -->
+		<link href="//fonts.googleapis.com/" rel="dns-prefetch">
+		<link href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Abril+Fatface|PT+Sans:400,400italic,700&amp;subset=latin,latin-ext" rel="stylesheet">
+
+		<link rel="stylesheet" href="/theme/css/poole.css" />
+		<link rel="stylesheet" href="/theme/css/hyde.css" />
+		<link rel="stylesheet" href="/theme/css/syntax.css" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+
+		<!-- RSS -->
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+	<script type="text/javascript">
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ 			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+ 			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ 			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			ga('create', 'UA-73126405-1', 'auto');
+			ga('send', 'pageview');
+	</script>
+	</head>
+
+	<body class="theme-base-0d">
+<div class="sidebar">
+	<div class="container sidebar-sticky">
+		<div class="sidebar-about">
+
+			<h1>
+				<a href="/">
+					<img class="profile-picture" src="/images/avatar.jpg">
+					vanz
+				</a>
+			</h1>
+			<p class="lead"></p>
+			<p class="lead">Just a guy fixing and creating bugs worldwide </p>
+			<p></p>
+		</div>
+		<nav class="sidebar-nav">
+					<a class="sidebar-nav-item" href="mailto:jvanz@jvanz.com">
+						<i class="fa fa-envelope"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://twitter.com/vanzstuff">
+						<i class="fa fa-twitter"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://br.linkedin.com/in/jvanz">
+						<i class="fa fa-linkedin"></i>
+					</a>
+					<a class="sidebar-nav-item" href="https://github.com/jvanz">
+						<i class="fa fa-github"></i>
+					</a>
+			<a class="sidebar-nav-item" href="feeds/all.rss.xml">
+				<i class="fa fa-feed"></i>
+			</a>
+		</nav>
+	</div>
+</div>		<div class="content container">
+<div class="post">
+	<h1 class="post-title">RAII: do not touch new and delete!</h1>
+	<span class="post-date">Tue 28 July 2020</span>
+	<p><img alt="" src="/images/giphy.gif"></p>
+<p>Some weeks ago I finished a online course about C++. I've already programmed in the language bBut I decided to take the course to refresh my skills and have some projects in my portfolio.
+I wrote this article to consolidate my memory and try to explain to myself one of the things that I've learnt. Maybe you can find useful as well. What I'll cover in this article is the modern way to handle
+resource in C++. I'll focus on memory, but the same concept can be applied in other resources types like sockets, files and etc. I'll also try to show how modern C++ does not require you to use <code>new</code>/<code>delete</code> to acquire and release memory. </p>
+<p>Okay, let's go. Image that we are software engineers working on a project to process image. But it's not common images. They are huge images. Something like image from telescopes, satellites, <a href="https://mars.nasa.gov/resources/curiositys-1-8-billion-pixel-panorama/?site=msl">real big images</a>. Maybe we can image you are working for <a href="https://www.nasa.gov/">NASA</a> or <a href="https://www.esa.int/">ESA</a>. Our job is write a program to do some kind of image processing. The "goal" of the system does not matter for this example. ;)</p>
+<p>We start to code the program by loading the images in memory.  Let's use the following program as the first few lines that we wrote :</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;chrono&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;fstream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;thread&gt;</span><span class="cp"></span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono_literals</span><span class="p">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * SOME OF THE INCLUDE AND FUNCTIONS USED IN THIS PROGRAM ARE FOR DEBUG ONLY.</span>
+<span class="cm"> */</span>
+
+<span class="k">class</span> <span class="nc">MyHugeImage</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="n">MyHugeImage</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">filepath</span><span class="p">)</span> <span class="o">:</span> <span class="n">_data</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// read the whole file into memory</span>
+    <span class="c1">// open the file and seek until the end</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">stream</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">binary</span> <span class="o">|</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">ate</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="n">size</span> <span class="o">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">tellg</span><span class="p">();</span>
+    <span class="n">_data</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="sc">&#39;\0&#39;</span><span class="p">);</span>
+    <span class="c1">// go back to the beginning if the file</span>
+    <span class="n">stream</span><span class="p">.</span><span class="n">seekg</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">stream</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">size</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Image loaded into memory!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">};</span>
+
+<span class="k">private</span><span class="o">:</span>
+  <span class="c1">// just a member function to keep the file content in memory</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">_data</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">MyHugeImage</span> <span class="n">image</span><span class="p">(</span><span class="s">&quot;myhugeimage.jpg&quot;</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">10</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Cool! now we have simple program to load the images and we can start to improve it. Next, we need to change our program to start doing some image processing. For that we add a new function which will do something with the image. Let's take a look in this new function:</p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">MyHugeImage</span> <span class="n">image</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Wow! Some crazy and awesome image processing&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">10</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">MyHugeImage</span> <span class="n">image</span><span class="p">(</span><span class="s">&quot;myhugeimage.jpg&quot;</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">3</span><span class="n">s</span><span class="p">);</span>
+  <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">image</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>But when we run the program, we notice something which should not happen. After the <code>SomeCrazyImageProcessing</code> is called, the memory consumption of the program double! Well, this happens because we are passing the image to function <em>by value</em>. Which means that your object will be copied. Leaving us with two <code>MyHugeImage</code> objects in memory. One instantiated in the <code>main</code> function and another one initialized when the function <code>SomeCrazyImageProcessing</code> is called. </p>
+<p><img alt="" src="/images/stackmem.gif"></p>
+<p>That's not acceptable. It's waste of resources. For fix that we can receive the image as a <em>reference.</em> This means the the object will not be copied. A reference is similar to a pointer. But it's guarantee that will be <strong>not</strong> null and we do not need to use the <code>-&gt;</code> operator. Let's try that:</p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">MyHugeImage</span> <span class="o">&amp;</span><span class="n">image</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Wow! Some crazy and awesome image processing&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">10</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">MyHugeImage</span> <span class="n">image</span><span class="p">(</span><span class="s">&quot;myhugeimage.jpg&quot;</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">3</span><span class="n">s</span><span class="p">);</span>
+  <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">image</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Great, we avoided the additional object in memory and save the time necessary to create it. Now when checking the system monitor, we notice that the memory consumption will stay the same. But we have another problem to solve. Our program is storing data on the stack. In C++ when we do not use the <code>new</code> operator, the object is stored in the <em>stack</em>. Which in our case seems not be the best place to store the data. For those who are not familiarize with the concepts of <em>stack</em>  and <em>heap</em>, there is a section below explaining the difference between both. Okay, come back to the problem...</p>
+<p>Keep things in the stack has its advantages. Like the automatic deallocation of the object. However, stack has a limit in size. As we are working with big images, it seems not the best place to put the data. There is another option. Store the data in the <em>heap</em>. But this comes with a price. We need to remember to release the memory requested when we are done. For that, it's used the <code>delete</code> operator. What happen when we call the <code>new</code> operator is that a memory block necessary to store the object is instantiated in the <em>heap</em> and the constructor is called to initialize the object in that piece of memory. So, let's update our class to does that:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;chrono&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;fstream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;thread&gt;</span><span class="cp"></span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono_literals</span><span class="p">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * SOME OF THE INCLUDE AND FUNCTIONS USED IN THIS PROGRAM ARE FOR DEBUG ONLY.</span>
+<span class="cm"> */</span>
+
+<span class="k">class</span> <span class="nc">MyHugeImage</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="n">MyHugeImage</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">filepath</span><span class="p">)</span> <span class="o">:</span> <span class="n">_data</span><span class="p">(</span><span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// read the whole file into memory</span>
+    <span class="c1">// open the file and seek until the end</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">stream</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">binary</span> <span class="o">|</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">ate</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="n">size</span> <span class="o">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">tellg</span><span class="p">();</span>
+    <span class="n">_data</span> <span class="o">=</span> <span class="k">new</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="sc">&#39;\0&#39;</span><span class="p">);</span>
+    <span class="c1">// go back to the beginning if the file</span>
+    <span class="n">stream</span><span class="p">.</span><span class="n">seekg</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">stream</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="n">_data</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">(),</span> <span class="n">size</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Image loaded into memory!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">};</span>
+
+  <span class="o">~</span><span class="n">MyHugeImage</span><span class="p">()</span> <span class="p">{</span> <span class="k">delete</span> <span class="n">_data</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="k">private</span><span class="o">:</span>
+  <span class="c1">// just a member function to keep the file content in memory</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">*</span><span class="n">_data</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">void</span> <span class="nf">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">MyHugeImage</span> <span class="n">image</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Wow! Some crazy and awesome image processing&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">10</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">MyHugeImage</span> <span class="n">image</span><span class="p">(</span><span class="s">&quot;myhugeimage.jpg&quot;</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">3</span><span class="n">s</span><span class="p">);</span>
+  <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">image</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">90</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Now, our class store the data in the <em>heap.</em> Because we are creating the <code>std::string</code> object using <code>new</code> and storing the pointer in the <code>_data</code> member variable<em>.</em> It's important to highlight that this version has the <em>destructor.</em> Which is called when the object run out of scope. Thus, it releases the memory which contains the image data. Avoiding memory leaks. </p>
+<p>Furthermore, a pointer it is very cheap to be copied. That's why the <code>SomeCrazyImageProcessing</code> now is copying the object again. But this time, the bytes from the image will not be copied. Just the pointer. It does not mean you always should copy the object. Actually, the <a href="https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#main">C++ Core Guidelines</a> has best practice of where and when use arguments by value or reference and much more. You definitely should check it out! ;-)</p>
+<p>Speaking on best practice, I would like to bring our attention to something important. In our example we have a class to initialize and release the resource (memory) , to store our image data. But why not just read the whole data in the main function and pass a pointer to the <code>SomeCrazyImageProcessing</code> function? Well, in this very simple and small program is easy to know where the resource is initialized and where it should be released. But imagine this program grow and hundreds of new functions are added and some parallelism and concurrency features are added as well... Who is the owner of the pointer? If we have a lot of different places pointing to the same resource, who is responsible to released? When it should be released? Things can get worst fast and this kind of raw pointer management can be a root of a lot of problems. This is where the <code>MyHugeImage</code> class comes to play. This is a very simple and naive implementation of what we call <em>Resource Acquisition Is Initialization.</em> </p>
+<p><em>Resource Acquisition Is Initialization</em> (a.k.a. RAII) is a power concept in C++ to manage all kind of resources. Memory, files, sockets, you named it. Actually, this is a best practice of how to implement resource management in C++. Take a look in the <a href="https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-raii">Core Guidelines</a>. When we use RAII the acquisition and release of a resource happens automatically. C++ guarantees that an object will be initialized using its constructors and the destructor will be called when the object goes out of scope. That's why we can see the <code>delete</code> call in the class's destructor. When the object <code>image</code> in the function <code>main</code> goes out of the scope everything is clean up and we have no resources leaks. </p>
+<p>But as I sad before, our class is very bad implemented, it does not follow the <a href="https://en.cppreference.com/w/cpp/language/rule_of_three">rule of five</a>. So, we have the option to implement the rule of five or using something from the standard library. Let's do the former option. To archive this, we will use <em>smart pointers</em>. A cool thing about <em>smart pointers</em> is that they make explicit who are the owner of the pointer/resource. There are two main types of smart pointers. The <code>std::shared_ptr</code> and <code>std::unique_prt</code>. As you can probably guess, the first one allow a shared ownership of the resource. The former one allow only one owner. In both cases when every pointer instance is destroyed, the resources is released/deallocated. How does it work? Let's adapt our program to use some of the <em>smart pointer</em> as the resource manager for our data. </p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;chrono&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;fstream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;thread&gt;</span><span class="cp"></span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono_literals</span><span class="p">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * SOME OF THE INCLUDE AND FUNCTIONS USED IN THIS PROGRAM ARE FOR DEBUG ONLY.</span>
+<span class="cm"> */</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">LoadImage</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">filepath</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">stream</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">binary</span> <span class="o">|</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">ate</span><span class="p">);</span>
+  <span class="k">auto</span> <span class="n">size</span> <span class="o">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">tellg</span><span class="p">();</span>
+  <span class="k">auto</span> <span class="n">data</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="sc">&#39;\0&#39;</span><span class="p">);</span>
+  <span class="c1">// go back to the beginning if the file</span>
+  <span class="n">stream</span><span class="p">.</span><span class="n">seekg</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">stream</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="n">data</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">(),</span> <span class="n">size</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Image loaded into memory!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">data</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">image</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Wow! Some crazy and awesome image processing. There are &quot;</span>
+            <span class="o">&lt;&lt;</span> <span class="n">image</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; owners of the pointer object&quot;</span>
+            <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">10</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">image</span> <span class="o">=</span> <span class="n">LoadImage</span><span class="p">(</span><span class="s">&quot;myhugeimage.jpg&quot;</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">3</span><span class="n">s</span><span class="p">);</span>
+  <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">image</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Processing done! Now there are &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">image</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span>
+            <span class="o">&lt;&lt;</span> <span class="s">&quot; owners.&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">10</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>If we run the program, the output will be something like this:</p>
+<div class="highlight"><pre><span></span>Image loaded into memory!
+Wow! Some crazy and awesome image processing. There are <span class="m">2</span> owners of the pointer object
+Processing <span class="k">done</span>! Now there are <span class="m">1</span> owners.
+</pre></div>
+
+
+<p>Notice the change in the owners count. When the object is passed to the <code>SomeCrazyImageProcessing</code> the argument object is a copy of the object passed by the caller. When this happen a counter inside the smart pointer object is incremented and the pointer to the resource copied. This is a very simple representation of what's going on:</p>
+<p><img alt="" src="/images/shared_ptr.gif"></p>
+<p>When the function returns its pointer object decreases the owners count and it is destroyed. But as the counter is different from <code>0</code> the resource is <strong>not</strong> deallocated yet. This will happens when the last owner goes out of scope. In our example, that happens when the pointer object living inside the <code>main</code> function goes out of scope as well. It's good to mention that passing a smart pointer to function as an argument it is not a best practice. If the function just need to access the resource underneath  you should pass a <a href="https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-smartptrparam">reference or a raw pointer</a>. But remember, references and raw pointer does not mean pointer ownership. </p>
+<p>Another smart pointer option is the <code>std::unique_ptr</code>. Different from the shared version, this one does not allow multiple owners. This means that when the pointer object is passed to another object/function, the previous one lost the ownership and the access to the resource. Let's update our program to does that. </p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;chrono&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;fstream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;thread&gt;</span><span class="cp"></span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono_literals</span><span class="p">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * SOME OF THE INCLUDE AND FUNCTIONS USED IN THIS PROGRAM ARE FOR DEBUG ONLY.</span>
+<span class="cm"> */</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">LoadImage</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">filepath</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">stream</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">binary</span> <span class="o">|</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">ate</span><span class="p">);</span>
+  <span class="k">auto</span> <span class="n">size</span> <span class="o">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">tellg</span><span class="p">();</span>
+  <span class="k">auto</span> <span class="n">data</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="sc">&#39;\0&#39;</span><span class="p">);</span>
+  <span class="c1">// go back to the beginning if the file</span>
+  <span class="n">stream</span><span class="p">.</span><span class="n">seekg</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">stream</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="n">data</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">(),</span> <span class="n">size</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Image loaded into memory!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">data</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">image</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Wow! Some crazy and awesome image processing.&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">10</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">image</span> <span class="o">=</span> <span class="n">LoadImage</span><span class="p">(</span><span class="s">&quot;myhugeimage.jpg&quot;</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">3</span><span class="n">s</span><span class="p">);</span>
+  <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">image</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Processing done!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="mi">10</span><span class="n">s</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>But there is a problem in the program. Take a look in the compiler output:</p>
+<div class="highlight"><pre><span></span><span class="n">main6</span><span class="p">.</span><span class="nl">cc</span><span class="p">:</span> <span class="n">In</span> <span class="n">function</span> <span class="err">‘</span><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span><span class="p">)</span><span class="err">’</span><span class="o">:</span>
+<span class="n">main6</span><span class="p">.</span><span class="nl">cc</span><span class="p">:</span><span class="mi">31</span><span class="o">:</span><span class="mi">33</span><span class="o">:</span> <span class="nl">error</span><span class="p">:</span> <span class="n">use</span> <span class="n">of</span> <span class="n">deleted</span> <span class="n">function</span> <span class="err">‘</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">_Tp</span><span class="p">,</span> <span class="n">_Dp</span><span class="o">&gt;::</span><span class="n">unique_ptr</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">_Tp</span><span class="p">,</span> <span class="n">_Dp</span><span class="o">&gt;&amp;</span><span class="p">)</span> <span class="p">[</span><span class="n">with</span> <span class="n">_Tp</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">__cxx11</span><span class="o">::</span><span class="n">basic_string</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span><span class="p">;</span> <span class="n">_Dp</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">default_delete</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">__cxx11</span><span class="o">::</span><span class="n">basic_string</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="o">&gt;</span><span class="p">]</span><span class="err">’</span>
+   <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">image</span><span class="p">);</span>
+                                 <span class="o">^</span>
+<span class="n">In</span> <span class="n">file</span> <span class="n">included</span> <span class="n">from</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">c</span><span class="o">++/</span><span class="mi">7</span><span class="o">/</span><span class="nl">memory</span><span class="p">:</span><span class="mi">80</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">from</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">c</span><span class="o">++/</span><span class="mi">7</span><span class="o">/</span><span class="kr">thread</span><span class="o">:</span><span class="mi">39</span><span class="p">,</span>
+                 <span class="n">from</span> <span class="n">main6</span><span class="p">.</span><span class="nl">cc</span><span class="p">:</span><span class="mi">4</span><span class="o">:</span>
+<span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">c</span><span class="o">++/</span><span class="mi">7</span><span class="o">/</span><span class="n">bits</span><span class="o">/</span><span class="n">unique_ptr</span><span class="p">.</span><span class="nl">h</span><span class="p">:</span><span class="mi">383</span><span class="o">:</span><span class="mi">7</span><span class="o">:</span> <span class="nl">note</span><span class="p">:</span> <span class="n">declared</span> <span class="n">here</span>
+       <span class="n">unique_ptr</span><span class="p">(</span><span class="k">const</span> <span class="n">unique_ptr</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+       <span class="o">^~~~~~~~~~</span>
+<span class="n">main6</span><span class="p">.</span><span class="nl">cc</span><span class="p">:</span><span class="mi">23</span><span class="o">:</span><span class="mi">6</span><span class="o">:</span> <span class="nl">note</span><span class="p">:</span>   <span class="n">initializing</span> <span class="n">argument</span> <span class="mi">1</span> <span class="n">of</span> <span class="err">‘</span><span class="kt">void</span> <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">__cxx11</span><span class="o">::</span><span class="n">basic_string</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="o">&gt;</span><span class="p">)</span><span class="err">’</span>
+ <span class="kt">void</span> <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">image</span><span class="p">)</span> <span class="p">{</span>
+      <span class="o">^~~~~~~~~~~~~~~~~~~~~~~~</span>
+</pre></div>
+
+
+<p>The compiler try to use the copy constructor of the <code>std::unique_ptr</code> class to copy the object from the caller (<code>main</code>) and initialize the argument of the function. But if that happen  there will be two objects pointing to the same resource. Which is what we do not want. The reason of why the compiler cannot access the copy constructor is because it does not exist. It is deleted. You can see that in the error message:  <code>use of deleted function ...</code>. This is how the <code>std::unique_ptr</code> class guarantee only one owner. The programmer <strong>cannot</strong> copy the object, just move it. Move semantics is another very powerful C++ feature and deserves a whole article for it. It allow the programmer to move object around scopes and objects without copy them. It is faster and more efficient. So, let's update our program to use <code>std::unique_ptr</code>. </p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;chrono&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;fstream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;thread&gt;</span><span class="cp"></span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono_literals</span><span class="p">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * SOME OF THE INCLUDE AND FUNCTIONS USED IN THIS PROGRAM ARE FOR DEBUG ONLY.</span>
+<span class="cm"> */</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">LoadImage</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">filepath</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">stream</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">binary</span> <span class="o">|</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">ate</span><span class="p">);</span>
+  <span class="k">auto</span> <span class="n">size</span> <span class="o">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">tellg</span><span class="p">();</span>
+  <span class="k">auto</span> <span class="n">data</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="sc">&#39;\0&#39;</span><span class="p">);</span>
+  <span class="c1">// go back to the beginning if the file</span>
+  <span class="n">stream</span><span class="p">.</span><span class="n">seekg</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">stream</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="n">data</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">(),</span> <span class="n">size</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Image loaded into memory!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">data</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">Processing1</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">image</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Processing1&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">Processing2</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">image</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Processing2&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">image</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Wow! Some crazy and awesome image processing.&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="n">Processing1</span><span class="p">(</span><span class="o">*</span><span class="n">image</span><span class="p">);</span>
+  <span class="n">Processing2</span><span class="p">(</span><span class="o">*</span><span class="n">image</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Processing done!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">image</span> <span class="o">=</span> <span class="n">LoadImage</span><span class="p">(</span><span class="s">&quot;myhugeimage.jpg&quot;</span><span class="p">);</span>
+  <span class="n">SomeCrazyImageProcessing</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">image</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>We take the opportunity to update the processing function adding more processing features ;-). Also we start to use raw pointer to give access to the function which just need access to the resource and does not need to manage the pointer object itself, as defined in the <a href="https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#r-resource-management">C++ Core guidelines</a>. In this version the image data is released after we are done with the processing. In other words, when the <code>SomeCrazyImageProcessing</code> returns. </p>
+<p><img alt="" src="/images/unique_ptr.gif"></p>
+<p>Another way to thing about smart pointer, as said by Bjarne Stroupstrup (C++ creator), is like a garbage collection mechanism. They clean stuff that you do not want to remember to clean. But it's important to highlight that this can be use for any kind of resource which requires some kind of <em>pair of functions,</em> like <code>open</code> and <code>close</code>. ;)</p>
+<h3>Final thoughts</h3>
+<p>That's all I have to you now. I hope this superficial article helps you understand what RAII is and how it can help you to handle resources properly in your C++ programs. I believe this is a very powerful concept which you should use in your C++ program right away. However, I do not think you should rewrite all your applications in C++ just because you just learnt classes which release resources "automatically" for you. As I've listened from one engineer, programming languages are a tools. Each tool has your goal. Do you not paint a wall with a hammer, don't you?</p>
+<p>If you would like to know more or if the article is confuse, let me know. Furthermore, there are more material in the references section.</p>
+<h3>Stack and  heap</h3>
+<p>Every program running in your computer consumes memory. This memory is split in 2 main parts. All leave in your RAM, but it's used differently by the running program. The most important ones are <em>stack</em> and <em>heap</em> (a.k.a. free store). In C++ memory model has other types of memory. But they are not important for this article. So, let's ignore them for now.</p>
+<p>When a program are running, every time a function is called a new <em>stack</em> frame is created. This <em>stack</em> frame has the functions arguments and the local variables used in the function scope. Once the function returns that memory is released. In the other hand, when the memory is allocated in the heap, it sits there until the memory is released by the program. If you have never worried about release memory is because your programming language has a mechanism to clean the memory automatically for you.</p>
+<p>In C++ is up to the programmer decide if the object will live on <em>stack</em> or <em>heap</em>. It's quite simple. If the object is allocated using the <code>new</code> operator, it will be stored in the <em>heap</em>. Which means that programmer must call <code>delete</code> to release that memory.  The <code>new</code> operator returns a pointer to the object initialized in the <code>heap</code>. Another option is instantiate the object on the <em>stack</em>. Here's an example of both methods:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+
+<span class="k">class</span> <span class="nc">MyClass</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="kt">int</span> <span class="n">intMemeber</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="n">floatMember</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// alloc the object in the stack</span>
+  <span class="n">MyClass</span> <span class="n">myClassObj</span><span class="p">;</span>
+  <span class="n">myClassObj</span><span class="p">.</span><span class="n">intMemeber</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="n">myClassObj</span><span class="p">.</span><span class="n">floatMember</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;int: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">myClassObj</span><span class="p">.</span><span class="n">intMemeber</span>
+            <span class="o">&lt;&lt;</span> <span class="s">&quot;, float: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">myClassObj</span><span class="p">.</span><span class="n">floatMember</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="c1">// alloc the object in the heap</span>
+  <span class="n">MyClass</span> <span class="n">myClassObj2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MyClass</span><span class="p">();</span>
+  <span class="n">myClassObj2</span><span class="o">-&gt;</span><span class="n">intMemeber</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="n">myClassObj2</span><span class="o">-&gt;</span><span class="n">floatMember</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;int: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">myClassObj2</span><span class="o">-&gt;</span><span class="n">intMemeber</span>
+            <span class="o">&lt;&lt;</span> <span class="s">&quot;, float: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">myClassObj2</span><span class="o">-&gt;</span><span class="n">floatMember</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="k">delete</span> <span class="n">myClassObj2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h3>References</h3>
+<hr>
+<p><a href="https://www.youtube.com/watch?v=xGDLkt-jBJ4">CppCon 2019: Arthur O'Dwyer "Back to Basics: Smart Pointers"</a></p>
+<p><a href="https://www.youtube.com/watch?v=7Qgd9B1KuMQ">CppCon 2019: Arthur O'Dwyer "Back to Basics: RAII and the Rule of Zero"</a></p>
+<p><a href="https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines">C++ Core Guidelines</a></p>
+<hr>
+	<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_shortname = 'jvanz';
+			(function() {
+	 			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	 			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	 			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	 		})();
+		</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</div>
+		</div>
+	</body>
+</html>
